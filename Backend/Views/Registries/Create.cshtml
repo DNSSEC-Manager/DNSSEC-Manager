@@ -1,0 +1,81 @@
+﻿@model Backend.Models.Registry
+
+@{
+    ViewData["Title"] = "Connect Registry";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="row">
+    <div class="col-md-12">
+        <form asp-action="Create">
+            <h2>Connect Registry</h2>
+            <p>Let's set up a connection to your registry</p>
+
+            <div class="align-left">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div class="form-group">
+                    <label asp-for="RegistryType" class="control-label"></label>
+                    <select asp-for="RegistryType" class="form-control" asp-items="@Html.GetEnumSelectList(typeof(RegistryType))"></select>
+                    <span asp-validation-for="RegistryType" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Name" class="control-label">Give it a friendly name</label>
+                    <input asp-for="Name" class="form-control" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Url" class="control-label">URL (examples: drs.domain-registry.nl https://api.openprovider.eu)</label>
+                    <input asp-for="Url" class="form-control" />
+                    <span asp-validation-for="Url" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Port" class="control-label">Port (examples: 700 for SIDN, leave empty for Openprovider)</label>
+                    <input asp-for="Port" class="form-control" />
+                    <span asp-validation-for="Port" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Username" class="control-label"></label>
+                    <input asp-for="Username" class="form-control" />
+                    <span asp-validation-for="Username" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Password" class="control-label"></label>
+                    <input type="password" asp-for="Password" class="form-control" />
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+                <div class="row">
+                    <div class="col-md-12 d-flex justify-content-between">
+                        <button type="button" class="btn btn-outline-primary js-test-connection-registry">Test API Connection</button>
+                        <button class="btn btn-primary js-submit-registry" type="submit">Create</button>
+
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <p>
+                            <div style="transition: .2s ease;" class="js-connection-error-registry alert alert-secondary">
+                                <div class="js-error-message">
+                                    Connection has not been tested yet
+                                </div>
+                            </div>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+
+    <environment names="Development">
+        <script src="~/js/registry.js" asp-append-version="true"></script>
+    </environment>
+    <environment names="Staging,Production">
+        <script src="~/js/registry.min.js" asp-append-version="true"></script>
+    </environment>
+}

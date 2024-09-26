@@ -1,0 +1,37 @@
+﻿.align-left {
+    text-align: left;
+}
+
+
+.border-top {
+    border-top: 1px solid #e5e5e5;
+}
+
+.border-bottom {
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.box-shadow {
+    box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05);
+}
+
+.accept-policy {
+    font-size: 1rem;
+    line-height: inherit;
+}
+
+.form-flex-group {
+    display: flex;
+    align-items: center;
+}
+
+.disnone{
+    display:none !important;
+}
+.mtop15{
+    margin-top: 15px;
+}
+
+.display-flex{
+    display:flex;
+}

@@ -1,0 +1,198 @@
+﻿@model IEnumerable<Backend.Models.Job>
+@using Humanizer;
+
+@{
+    ViewData["Title"] = "Jobs";
+    var permanents = ViewBag.permanentJobs;
+    var regulars = ViewBag.nonPermanentJobs;
+    var sort = ViewBag.sort;
+    var filter = ViewBag.filter;
+    var test = TimeSpan.FromDays(1).Humanize();
+}
+
+<h1>Jobs</h1>
+
+<br />
+
+<h4>Permanent jobs</h4>
+
+<br />
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Task)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.DnsServer)
+            </th>
+            <th>
+                Successful
+            </th>
+            <th>
+                Last execution
+            </th>
+            <th>
+                Next execution
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in permanents)
+        {
+            <tr>
+                <td>
+                    @item.Task
+                </td>
+                <td>
+                    @(item.DnsServer != null ? item.DnsServer.Name : "None")
+                </td>
+                <td>
+                    @(item.UpdatedAt == DateTime.MinValue ? "Not yet" : (item.IsSuccessful ? "Yes" : "No"))
+                </td>
+                <td>
+                    @(item.UpdatedAt == DateTime.MinValue ? "Not yet" : ((DateTime.Now - (DateTime)item.UpdatedAt)).Humanize() + " ago")
+                </td>
+                <td>
+                    @(item.RunAfter <= DateTime.Now ? "Now" : "in " + (((DateTime)item.RunAfter - DateTime.Now)).Humanize())
+                </td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@item.Id">Details</a>
+                </td>
+            </tr>
+        }
+</table>
+
+<br />
+
+<div class="row">
+    <div class="col-sm-12">
+        <h4>Regular jobs</h4>
+        <br />
+        <a class="btn btn-primary" asp-action="Index" asp-route-id="all" asp-route-sort="@sort">All</a>
+        <a class="btn btn-primary" asp-action="Index" asp-route-id="unfinished" asp-route-sort="@sort">Unfinished Jobs</a>
+        <a class="btn btn-primary" asp-action="Index" asp-route-id="finished" asp-route-sort="@sort">Finished Jobs</a>
+        <a class="btn btn-primary" asp-action="Index" asp-route-id="unsuccessful" asp-route-sort="@sort">Unsuccessful Jobs</a>
+    </div>
+
+
+</div>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                <a asp-action="Index" asp-route-id="@filter" asp-route-sort="@(sort == "task" ? "task_desc" : "task")">
+                    Task
+                    @if (sort == "task")
+                    {
+                        <i class="fa fa-angle-up"></i>
+                    }
+                    else if (sort == "task_desc")
+                    {
+                        <i class="fa fa-angle-down"></i>
+                    }
+                </a>
+            </th>
+            <th>
+                Domain
+            </th>
+            <th>
+                <a asp-action="Index" asp-route-id="@filter" asp-route-sort="@(sort == "successful" ? "successful_desc" : "successful")">
+                    Succesful
+                    @if (sort == "successful")
+                    {
+                        <i class="fa fa-angle-up"></i>
+                    }
+                    else if (sort == "successful_desc")
+                    {
+                        <i class="fa fa-angle-down"></i>
+                    }
+                </a>
+            </th>
+            <th>
+                <a asp-action="Index" asp-route-id="@filter" asp-route-sort="@(sort == "creationDate" ? "creationDate_desc" : "creationDate")">
+                    Creation date
+                    @if (sort == "creationDate")
+                    {
+                        <i class="fa fa-angle-up"></i>
+                    }
+                    else if (sort == "creationDate_desc")
+                    {
+                        <i class="fa fa-angle-down"></i>
+                    }
+                </a>
+            </th>
+            <th>
+                <a asp-action="Index" asp-route-id="@filter" asp-route-sort="@(sort == "lastExecuted" ? "lastExecuted_desc" : "lastExecuted")">
+                    Last executed date
+                    @if (sort == "lastExecuted")
+                    {
+                        <i class="fa fa-angle-up"></i>
+                    }
+                    else if (sort == "lastExecuted_desc")
+                    {
+                        <i class="fa fa-angle-down"></i>
+                    }
+                </a>
+            </th>
+            <th>
+                <a asp-action="Index" asp-route-id="@filter" asp-route-sort="@(sort == "nextdate" || string.IsNullOrEmpty(sort) ? "nextdate_desc" : "nextdate")">
+                    Next execution date
+                    @if (sort == "nextdate" || string.IsNullOrEmpty(sort))
+                    {
+                        <i class="fa fa-angle-up"></i>
+                    }
+                    else if (sort == "nextdate_desc")
+                    {
+                        <i class="fa fa-angle-down"></i>
+                    }
+                </a>
+
+            </th>
+            <th>
+                Job step
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (regulars != null)
+        {
+        @foreach (var item in regulars)
+        {
+        <tr>
+            <td>
+                @item.Task
+            </td>
+            <td>
+                @if (item.DomainId != null)
+                {
+                <a href="~/Domains/Details/@item.DomainId">@item.Domain?.Name</a>
+                }
+            </td>
+            <td>
+                @(item.UpdatedAt == DateTime.MinValue ? "Not yet" : (item.IsSuccessful ? "Yes" : "No"))
+            </td>
+            <td>
+                @item.CreatedAt
+            </td>
+            <td>
+                @(item.UpdatedAt == DateTime.MinValue ? "Not yet" : item.UpdatedAt)
+            </td>
+            <td>
+                @(item.IsSuccessful ? "None" : item.RunAfter)
+            </td>
+            <td>
+                @(item.Step == null ? "No step" : item.Step.ToString())
+            </td>
+            <td>
+                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
+                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a>
+            </td>
+        </tr>
+        }
+        }
+    </tbody>
+</table>

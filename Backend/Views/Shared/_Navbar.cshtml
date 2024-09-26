@@ -1,0 +1,37 @@
+﻿﻿@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+
+<ul class="navbar-nav flex-grow-1">
+
+@if (SignInManager.IsSignedIn(User))
+{
+    <li class="nav-item">
+        <a class="nav-link text-dark" asp-area="" asp-controller="Dashboard" asp-action="Index">Dashboard</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link text-dark" asp-area="" asp-controller="Domains" asp-action="Index">Domains</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link text-dark" asp-area="" asp-controller="Jobs" asp-action="Index">Jobs</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link text-dark" asp-area="" asp-controller="Logs" asp-action="Index">Logs</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link text-dark" asp-area="" asp-controller="Scheduler" asp-action="Index">Scheduler</a>
+    </li>
+    <li class="nav-item dropdown">
+        <a class="nav-link text-dark dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Configuration
+        </a>
+        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+            <a class="nav-link text-dark" asp-area="" asp-controller="DnsServers" asp-action="Index">DNS Servers</a>
+            <a class="nav-link text-dark" asp-area="" asp-controller="Registries" asp-action="Index">Registries</a>
+            <a class="nav-link text-dark" asp-area="" asp-controller="TopLevelDomains" asp-action="Index">TLDs</a>
+            <a class="nav-link text-dark" asp-area="" asp-controller="Nameservers" asp-action="Index">Nameservers</a>
+            <a class="nav-link text-dark" asp-area="" asp-controller="Settings" asp-action="Index">Settings</a>
+        </div>
+    </li>
+}
+</ul>

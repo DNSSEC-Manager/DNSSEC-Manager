@@ -1,0 +1,76 @@
+﻿@model IEnumerable<Backend.Models.TopLevelDomain>
+
+@{
+    ViewData["Title"] = "Top Level Domains";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1>Top Level Domains</h1>
+
+<br />
+
+@*<p>
+            <a asp-action="Create" class="btn btn-primary"><span class="fas fa-plus"></span> Add TLD</a>
+        </p>
+
+    <br />*@
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                TLD
+            </th>
+            <th>
+                DNSSEC Algorithm
+            </th>
+            <th>Domain Count</th>
+            <th>
+                Connected Registries
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @*<a asp-action="Details" asp-route-id="@item.Id">@Html.DisplayFor(modelItem => item.Tld)</a>*@
+                    .@Html.DisplayFor(modelItem => item.Tld)
+                </td>
+                <td>
+                    @if (item.OverrideAlgorithmId == null)
+                    {
+                        <txt>default: @TempData["DefaultDnssecAlgorithm"]</txt>
+                    }
+                    else
+                    {
+                        @item.Algorithm.Name <txt>(</txt> @item.Algorithm.Number <txt>)</txt>
+                    }
+                </td>
+                <td><a href="~/Domains?search=.@item.Tld">@item.Domains.Count</a></td>
+                <td>
+                    @foreach (var tldRegistry in item.TopLevelDomainRegistries)
+                    {
+                        <a href="~/Registries/Details/@tldRegistry.Registry.Id">@tldRegistry.Registry.Name</a><br />
+                    }
+                </td>
+                <td>
+                    <a class="btn btn-primary" asp-action="Edit" asp-route-id="@item.Id">Edit</a>
+                    @*<a asp-action="Details" asp-route-id="@item.Id">Details</a> |*@
+                    @if (item.Domains.Count == 0)
+                    {
+                        <a class="btn btn-danger" asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                    }
+                    else
+                    {
+                        <span class="d-inline-block" tabindex="0" data-toggle="tooltip" title="You cannot delete a TLD with connected domains">
+                            <a class="btn btn-danger disabled" asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                        </span>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

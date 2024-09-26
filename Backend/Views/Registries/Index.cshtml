@@ -1,0 +1,78 @@
+﻿@model IEnumerable<Backend.Models.Registry>
+
+@{
+    ViewData["Title"] = "Registries";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1>Registries</h1>
+
+<br />
+
+<p>
+    <a asp-action="Create" class="btn btn-primary"><span class="fas fa-plus"></span> Connect Registry</a>
+</p>
+
+<br />
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Name)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Url)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Username)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.RegistryType)
+            </th>
+            <th>
+                Total Domains
+            </th>
+            <th>
+                Signed Domains
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            var totalDomains = item.Domains.Count();
+            var signedDomains = item.Domains.Count(x => x.SignMatch == true);
+            decimal percentSigned;
+
+            if (signedDomains == 0 || totalDomains == 0)
+            {
+                percentSigned = 0;
+            }
+            else
+            {
+                percentSigned = ((decimal)signedDomains / (decimal)totalDomains * 100);
+            }
+            <tr>
+                <td>
+                    <a asp-action="Details" asp-route-id="@item.Id">@Html.DisplayFor(modelItem => item.Name)</a>
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Url)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Username)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.RegistryType)
+                </td>
+                <td>
+                    <a href="~/Domains?registryId=@item.Id">@totalDomains</a>
+                </td>
+                <td>
+                    <a href="~/Domains?registryId=@item.Id&signed=1">@signedDomains</a> (@percentSigned.ToString("N1") %)
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

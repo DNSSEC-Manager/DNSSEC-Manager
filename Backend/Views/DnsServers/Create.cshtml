@@ -1,0 +1,90 @@
+﻿@model Backend.Models.DnsServer
+
+@{
+    ViewData["Title"] = "Connect DNS Server";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="row">
+    <div class="col-md-12">
+        <form asp-action="Create">
+            @Html.AntiForgeryToken()
+            <h2>Connect DNS Server</h2>
+
+            <div class="form-group">
+                <label asp-for="ServerType" class="control-label">Your server type</label>
+                <select asp-for="ServerType" asp-items="@Html.GetEnumSelectList(typeof(DnsServerType))" class="form-control"></select>
+                <span asp-validation-for="ServerType" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Name" class="control-label">Give it a friendly name</label>
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+
+            <div class="form-group" style="display: flex; flex-direction: column">
+                <label asp-for="BaseUrl">What is the base URL for the API? (for example: http://ipaddress:8081)</label>
+                <div style="display: flex; align-items: center">
+                    <input asp-for="BaseUrl" class="form-control" />
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div>
+                    <label asp-for="AuthToken" class="control-label">Enter or generate an API Token</label>
+                    <button type="button" for="AuthToken" class="btn btn-outline-primary js-generate-auth">Generate</button>
+                </div>
+                <div class="form-flex-group" style="margin-top: 15px;">
+                    <input asp-for="AuthToken" autocomplete="off" class="form-control js-auth-token" />
+                    <span asp-validation-for="AuthToken" class="text-danger"></span>
+                    <button type="button" class="btn proper-button js-copy-code"> <i class="far fa-copy"></i></button>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <p>After setting up your DNS Server with this API Key, press "Test connection" to see if we can make a connection</p>
+                    <p>
+                        <strong>Configuration snippet for your PowerDNS /etc/pdns/pdns.conf:</strong><br />
+                        api=yes<br />
+                        api-key=your-secret-token<br />
+                        webserver-address=0.0.0.0<br />
+                        webserver-port=8081<br />
+                        webserver-allow-from=IP of this app, separate with comma if you have more IP’s to allow<br />
+                        <br />
+                        Remember to open up the firewall and keep IPv4 and IPv6 in mind
+                    </p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12 d-flex justify-content-between">
+                    <button type="button" class="btn btn-outline-primary js-test-connection">Test API Connection</button>
+                    <button type="submit" class="btn btn-primary">Create</button>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <p>
+                        <div class="js-connection-error alert alert-secondary">Connection has not been tested yet</div>
+                    </p>
+                </div>
+            </div>
+            <div class="form-group">
+
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+
+    <environment names="Development">
+        <script src="~/js/createDns.js" asp-append-version="true"></script>
+    </environment>
+    <environment names="Staging,Production">
+        <script src="~/js/createDns.js" asp-append-version="true"></script>
+    </environment>
+}

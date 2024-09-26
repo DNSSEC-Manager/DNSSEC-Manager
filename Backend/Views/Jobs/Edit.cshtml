@@ -1,0 +1,70 @@
+﻿@model Backend.Models.Job
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h1>Edit</h1>
+
+<h4>Job</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
+            @* <div class="form-group"> *@
+            @*     <label asp-for="DnsServerId" class="control-label"></label> *@
+            @*     <select asp-for="DnsServerId" class="form-control" asp-items="ViewBag.DnsServerId"></select> *@
+            @*     <span asp-validation-for="DnsServerId" class="text-danger"></span> *@
+            @* </div> *@
+            @* <div class="form-group"> *@
+            @*     <label asp-for="DomainId" class="control-label"></label> *@
+            @*     <select asp-for="DomainId" class="form-control" asp-items="ViewBag.DomainId"></select> *@
+            @*     <span asp-validation-for="DomainId" class="text-danger"></span> *@
+            @* </div> *@
+            @* <div class="form-group"> *@
+            @*     <label asp-for="Task" class="control-label"></label> *@
+            @*     <select asp-for="Task" class="form-control"></select> *@
+            @*     <span asp-validation-for="Task" class="text-danger"></span> *@
+            @* </div> *@
+            @* <div class="form-group form-check"> *@
+            @*     <label class="form-check-label"> *@
+            @*         <input class="form-check-input" asp-for="IsPermanent" /> @Html.DisplayNameFor(model => model.IsPermanent) *@
+            @*     </label> *@
+            @* </div> *@
+            <div class="form-group">
+                <label asp-for="IsCompleted" class="control-label">Job Is Completed? </label>
+                @*<label class="form-check-label">*@
+                <input class="form-check-input" asp-for="IsCompleted" /> @*@Html.DisplayNameFor(model => model.IsCompleted)*@
+                @*</label>*@
+            </div>
+            @* <div class="form-group"> *@
+            @*     <label asp-for="CreatedAt" class="control-label"></label> *@
+            @*     <input asp-for="CreatedAt" class="form-control" /> *@
+            @*     <span asp-validation-for="CreatedAt" class="text-danger"></span> *@
+            @* </div> *@
+            <div class="form-group">
+                <label asp-for="RunAfter" class="control-label">Next Execution</label>
+                <input asp-for="RunAfter" class="form-control" />
+                <span asp-validation-for="RunAfter" class="text-danger"></span>
+            </div>
+            @* <div class="form-group"> *@
+            @*     <label asp-for="UpdatedAt" class="control-label"></label> *@
+            @*     <input asp-for="UpdatedAt" class="form-control" /> *@
+            @*     <span asp-validation-for="UpdatedAt" class="text-danger"></span> *@
+            @* </div> *@
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

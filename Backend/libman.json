@@ -1,0 +1,10 @@
+{
+  "version": "1.0",
+  "defaultProvider": "cdnjs",
+  "libraries": [
+    {
+      "library": "popper.js@1.14.7",
+      "destination": "wwwroot/lib/popper.js/"
+    }
+  ]
+}

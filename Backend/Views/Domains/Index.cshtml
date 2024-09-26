@@ -1,0 +1,594 @@
+﻿@using System.Dynamic
+@using Humanizer
+@using Microsoft.AspNetCore.Html
+@model Backend.ViewModels.DomainsIndexViewModel
+
+@{
+    ViewData["Title"] = "Domain Overview";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1>Domains</h1>
+
+<br />
+
+<p>
+    <button data-toggle="modal" data-target="#CreateDomainModal" class="btn btn-primary"><span class="fas fa-plus"></span> Add Domain</button>
+</p>
+
+<div class="modal fade" id="CreateDomainModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create a new domain on your DNS Server</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="CreateDomainInput">Domain name</label>
+                    <input class="form-control" type="text" name="name" value="" id="CreateDomainInput" />
+                </div>
+                <div class="form-group">
+                    <label for="selectDnsId">DNS Server</label>
+                    <select id="selectDnsId" class="form-control">
+                        @foreach (var dnsServer in Model.DnsServers)
+                        {
+                            <option value="@dnsServer.Id">
+                                @dnsServer.Name
+                            </option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary js-create-domain-save">Create</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<br />
+
+<div class="search">
+    <form asp-action="Index" method="get">
+        <input class="disnone" type="number" name="pageNumber" value="1" />
+        <input class="disnone" type="number" name="registryId" value="@Model.RegistryId" />
+        <input class="disnone" type="number" name="dnsId" value="@Model.DnsId" />
+        <input class="disnone" type="text" name="sort" value="@Model.Sort" />
+        <input class="disnone" type="number" name="removed" value="@Model.Removed" />
+        <input class="disnone" type="number" name="signed" value="@Model.Signed" />
+        <div class="form-actions no-color search__flex">
+            <input class="search__input" type="text" name="search" value="@Model.Search" />
+            <button type="submit" class="btn btn-link search__button">
+                <i class="fas fa-search"></i>
+            </button>
+
+        </div>
+    </form>
+</div>
+
+<br />
+
+<a asp-action="Index" class="btn btn-link" style="margin-top:5px;">
+    Remove all filters
+</a>
+
+<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#SignAllDomainsModal">
+    Sign All Domains
+</button>
+
+<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#RolloverAllDomainsModal">
+    Rollover All Domains
+</button>
+
+<button type="button" class="btn btn-danger" data-toggle="modal" data-target="#UnsignAllDomainsModal">
+    Unsign All Domains
+</button>
+
+@if (!Model.AutomaticSigningEnabled)
+{
+    <a href="~/Settings" class="btn btn-success">
+        Enable Automatic Signing
+    </a>
+}
+@*else
+{
+    <a href="~/Settings" class="btn btn-success">
+        <span class="fas fa-check"></span> Automatic Signing Enabled
+    </a>
+}*@
+
+<button type="button" class="btn btn-danger" data-toggle="modal" data-target="#CleanupDomainsModal">
+    Cleanup Removed Domains
+</button>
+
+<!-- Modal -->
+<div class="modal fade" id="CleanupDomainsModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Are you sure you want to cleanup all removed domains?</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                This will cleanup all removed domains from our application
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+                <button type="button" class="btn btn-primary js-cleanup-all-domains">Yes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="UnsignAllDomainsModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Are you sure you want to unsign every domain?</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                This will create an unsign-job for every signed domain
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+                <button type="button" class="btn btn-primary js-unsign-all-domains">Yes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="RolloverAllDomainsModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Are you sure you want to rollover every domain?</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                This will create a rollover-job for every signed domain
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+                <button type="button" class="btn btn-primary js-rollover-all-domains">Yes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="SignAllDomainsModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Are you sure you want to sign every domain?</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                This will create a sign-job for every unsigned domain with a known registry and nameserver group
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+                <button type="button" class="btn btn-primary js-sign-all-domains">Yes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<br /><br />
+
+<table class="table">
+    <thead>
+        <tr>
+            <th style="min-width: 30%">
+                <a class="@(Model.Sort != "name" && Model.Sort != "name_desc" ? "text-dark" : "") " asp-action="Index" asp-route-search="@Model.Search"
+                   asp-route-pageNumber="1" asp-route-registryId="@Model.RegistryId"
+                   asp-route-dnsId="@Model.DnsId" asp-route-nameserversId="@Model.NameserversId" asp-route-removed="@Model.Removed" asp-route-signed="@Model.Signed" asp-route-pageSize="@Model.PageSize"
+                   asp-route-sort="@(Model.Sort == "name" ? "name_desc" : "name")">
+                    Domain Name
+                    @if (Model.Sort == "name")
+                    {
+                        <i class="fa fa-angle-up"></i>
+                    }
+                    else if (Model.Sort == "name_desc")
+                    {
+                        <i class="fa fa-angle-down"></i>
+                    }
+                </a>
+                <br /> (@Model.SelectionDomainsCount domains)
+            </th>
+            <th style="min-width: 10%">
+                <div class="dropdown">
+                    <a class="@(Model.DnsId == null ? "text-dark" : "") dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        DNS Server
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                        <a class="nav-link text-dark" asp-action="Index" asp-route-search="@Model.Search" asp-route-removed="@Model.Removed" asp-route-signed="@Model.Signed" asp-route-pageSize="@Model.PageSize"
+                           asp-route-pageNumber="1" asp-route-registryId="@Model.RegistryId"
+                           asp-route-dnsId="" asp-route-nameserversId="@Model.NameserversId" asp-route-sort="@Model.Sort">
+                            All
+                        </a>
+                        @foreach (var dnsServer in Model.DnsServers)
+                        {
+                            <a class="nav-link text-dark" asp-action="Index" asp-route-search="@Model.Search" asp-route-removed="@Model.Removed" asp-route-signed="@Model.Signed" asp-route-pageSize="@Model.PageSize"
+                               asp-route-pageNumber="1" asp-route-registryId="@Model.RegistryId"
+                               asp-route-dnsId="@dnsServer.Id" asp-route-nameserversId="@Model.NameserversId" asp-route-sort="@Model.Sort">
+                                @dnsServer.Name
+                            </a>
+                        }
+
+                    </div>
+                </div>
+            </th>
+            <th style="min-width: 10%">
+                <div class="dropdown">
+                    <a class="@(Model.RegistryId == null ? "text-dark" : "") dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Registry
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                        <a class="nav-link text-dark" asp-action="Index" asp-route-search="@Model.Search" asp-route-removed="@Model.Removed" asp-route-signed="@Model.Signed" asp-route-pageSize="@Model.PageSize"
+                           asp-route-pageNumber="1" asp-route-registryId="" asp-route-dnsId="@Model.DnsId"
+                           asp-route-nameserversId="@Model.NameserversId" asp-route-sort="@Model.Sort">
+                            All
+                        </a>
+                        <a class="nav-link text-dark" asp-action="Index" asp-route-search="@Model.Search" asp-route-removed="@Model.Removed" asp-route-signed="@Model.Signed" asp-route-pageSize="@Model.PageSize"
+                           asp-route-pageNumber="1" asp-route-registryId="0" asp-route-dnsId="@Model.DnsId"
+                           asp-route-nameserversId="@Model.NameserversId" asp-route-sort="@Model.Sort">
+                            Any
+                        </a>
+                        <a class="nav-link text-dark" asp-action="Index" asp-route-search="@Model.Search" asp-route-removed="@Model.Removed" asp-route-signed="@Model.Signed" asp-route-pageSize="@Model.PageSize"
+                           asp-route-pageNumber="1" asp-route-registryId="-1" asp-route-dnsId="@Model.DnsId"
+                           asp-route-nameserversId="@Model.NameserversId" asp-route-sort="@Model.Sort">
+                            None
+                        </a>
+                        @foreach (var registry in Model.Registries)
+                        {
+                            <a class="nav-link text-dark" asp-action="Index" asp-route-search="@Model.Search" asp-route-removed="@Model.Removed" asp-route-signed="@Model.Signed" asp-route-pageSize="@Model.PageSize"
+                               asp-route-pageNumber="1" asp-route-registryId="@registry.Id" asp-route-dnsId="@Model.DnsId"
+                               asp-route-nameserversId="@Model.NameserversId" asp-route-sort="@Model.Sort">
+                                @registry.Name
+                            </a>
+                        }
+
+                    </div>
+                </div>
+            </th>
+            <th style="min-width: 10%">
+                <div class="dropdown">
+                    <a class="@(Model.NameserversId == null ? "text-dark" : "") dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Nameservers
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                        <a class="nav-link text-dark" asp-action="Index" asp-route-search="@Model.Search"
+                           asp-route-pageNumber="1" asp-route-registryId="@Model.RegistryId" asp-route-removed="@Model.Removed" asp-route-signed="@Model.Signed" asp-route-pageSize="@Model.PageSize"
+                           asp-route-dnsId="@Model.DnsId" asp-route-nameserversId="" asp-route-sort="@Model.Sort">
+                            All
+                        </a>
+                        <a class="nav-link text-dark" asp-action="Index" asp-route-search="@Model.Search"
+                           asp-route-pageNumber="1" asp-route-registryId="@Model.RegistryId" asp-route-removed="@Model.Removed" asp-route-signed="@Model.Signed" asp-route-pageSize="@Model.PageSize"
+                           asp-route-dnsId="@Model.DnsId" asp-route-nameserversId="0" asp-route-sort="@Model.Sort">
+                            Any
+                        </a>
+                        <a class="nav-link text-dark" asp-action="Index" asp-route-search="@Model.Search"
+                           asp-route-pageNumber="1" asp-route-registryId="@Model.RegistryId" asp-route-removed="@Model.Removed" asp-route-signed="@Model.Signed" asp-route-pageSize="@Model.PageSize"
+                           asp-route-dnsId="@Model.DnsId" asp-route-nameserversId="-1" asp-route-sort="@Model.Sort">
+                            None
+                        </a>
+                        @foreach (var nameserver in Model.NameServerGroups)
+                        {
+                            <a class="nav-link text-dark" asp-action="Index" asp-route-search="@Model.Search"
+                               asp-route-pageNumber="1" asp-route-registryId="@Model.RegistryId" asp-route-removed="@Model.Removed" asp-route-signed="@Model.Signed" asp-route-pageSize="@Model.PageSize"
+                               asp-route-dnsId="@Model.DnsId" asp-route-nameserversId="@nameserver.Id" asp-route-sort="@Model.Sort">
+                                @nameserver.Name
+                            </a>
+                        }
+
+                    </div>
+                </div>
+            </th>
+            <th style="min-width: 10%">
+                <div class="dropdown">
+                    <a class="@(Model.Removed == null ? "text-dark" : "") dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Status
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                        <a class="nav-link text-dark" asp-action="Index" asp-route-search="@Model.Search"
+                           asp-route-pageNumber="1" asp-route-registryId="@Model.RegistryId"
+                           asp-route-dnsId="@Model.DnsId" asp-route-nameserversId="@Model.NameserversId" asp-route-sort="@Model.Sort" asp-route-removed="" asp-route-signed="@Model.Signed" asp-route-pageSize="@Model.PageSize">
+                            All
+                        </a>
+                        <a class="nav-link text-dark" asp-action="Index" asp-route-search="@Model.Search"
+                           asp-route-pageNumber="1" asp-route-registryId="@Model.RegistryId"
+                           asp-route-dnsId="@Model.DnsId" asp-route-nameserversId="@Model.NameserversId" asp-route-sort="@Model.Sort" asp-route-removed="1" asp-route-signed="@Model.Signed" asp-route-pageSize="@Model.PageSize">
+                            Removed
+                        </a>
+                        <a class="nav-link text-dark" asp-action="Index" asp-route-search="@Model.Search"
+                           asp-route-pageNumber="1" asp-route-registryId="@Model.RegistryId"
+                           asp-route-dnsId="@Model.DnsId" asp-route-nameserversId="@Model.NameserversId" asp-route-sort="@Model.Sort" asp-route-removed="0" asp-route-signed="@Model.Signed" asp-route-pageSize="@Model.PageSize">
+                            Ok
+                        </a>
+                    </div>
+                </div>
+            </th>
+            <th style="min-width: 10%">
+                <div class="dropdown">
+                    <a class="@(Model.Signed == null ? "text-dark" : "") dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        DNSSEC
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                        <a class="nav-link text-dark" asp-action="Index" asp-route-search="@Model.Search"
+                           asp-route-pageNumber="1" asp-route-registryId="@Model.RegistryId"
+                           asp-route-dnsId="@Model.DnsId" asp-route-nameserversId="@Model.NameserversId" asp-route-pageSize="@Model.PageSize" asp-route-sort="@Model.Sort" asp-route-removed="@Model.Removed" asp-route-signed="">
+                            All
+                        </a>
+                        <a class="nav-link text-dark" asp-action="Index" asp-route-search="@Model.Search"
+                           asp-route-pageNumber="1" asp-route-registryId="@Model.RegistryId"
+                           asp-route-dnsId="@Model.DnsId" asp-route-nameserversId="@Model.NameserversId" asp-route-pageSize="@Model.PageSize" asp-route-sort="@Model.Sort" asp-route-removed="@Model.Removed" asp-route-signed="1">
+                            Signed
+                        </a>
+                        <a class="nav-link text-dark" asp-action="Index" asp-route-search="@Model.Search"
+                           asp-route-pageNumber="1" asp-route-registryId="@Model.RegistryId"
+                           asp-route-dnsId="@Model.DnsId" asp-route-nameserversId="@Model.NameserversId" asp-route-pageSize="@Model.PageSize" asp-route-sort="@Model.Sort" asp-route-removed="@Model.Removed" asp-route-signed="0">
+                            Unsigned
+                        </a>
+                    </div>
+                </div>
+            </th>
+            <th style="min-width: 10%">
+                <a class="@(Model.Sort != "ttl" && Model.Sort != "ttl_desc" ? "text-dark" : "") " asp-action="Index" asp-route-search="@Model.Search"
+                   asp-route-pageNumber="1" asp-route-registryId="@Model.RegistryId"
+                   asp-route-dnsId="@Model.DnsId" asp-route-nameserversId="@Model.NameserversId" asp-route-removed="@Model.Removed" asp-route-signed="@Model.Signed" asp-route-pageSize="@Model.PageSize"
+                   asp-route-sort="@(Model.Sort == "ttl" ? "ttl_desc" : "ttl")">
+                    TTL
+                    @if (Model.Sort == "ttl")
+                    {
+                        <i class="fa fa-angle-up"></i>
+                    }
+                    else if (Model.Sort == "ttl_desc")
+                    {
+                        <i class="fa fa-angle-down"></i>
+                    }
+                </a>
+            </th>
+            <th style="min-width: 10%">
+                <a class="@(Model.Sort != "lastChecked" && Model.Sort != "lastChecked_desc" ? "text-dark" : "") " asp-action="Index" asp-route-search="@Model.Search"
+                   asp-route-pageNumber="1" asp-route-registryId="@Model.RegistryId"
+                   asp-route-dnsId="@Model.DnsId" asp-route-nameserversId="@Model.NameserversId" asp-route-removed="@Model.Removed" asp-route-signed="@Model.Signed" asp-route-pageSize="@Model.PageSize"
+                   asp-route-sort="@(Model.Sort == "lastChecked" ? "lastChecked_desc" : "lastChecked")">
+                    Last checked
+                    @if (Model.Sort == "lastChecked")
+                    {
+                        <i class="fa fa-angle-up"></i>
+                    }
+                    else if (Model.Sort == "lastChecked_desc")
+                    {
+                        <i class="fa fa-angle-down"></i>
+                    }
+                </a>
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.Domains)
+        {
+            <tr>
+                <td>
+                    <a asp-action="Details" asp-route-id="@item.Id">  @Html.DisplayFor(modelItem => item.Name)</a>
+                </td>
+                <td>
+                    @if (item.DnsServer != null)
+                    {
+                        @Html.DisplayFor(modelItem => item.DnsServer.Name)
+                    }
+                </td>
+                <td>
+                    @if (item.Registry != null)
+                    {
+                        @Html.DisplayFor(modelItem => item.Registry.Name)
+                    }
+                </td>
+                <td>
+                    @if (item.NameServerGroup != null)
+                    {
+                        @Html.DisplayFor(modelItem => item.NameServerGroup.Name)
+                    }
+                </td>
+                <td>
+                    @(!item.RemovedFromDnsServer ? "Ok" : "Removed")
+                </td>
+                <td>
+                    <span class="label @(!item.SignMatch ? "label--red" : "label--green")">
+                        @(!item.SignMatch ? "Unsigned" : "Signed")
+                    </span>
+                </td>
+                <td>
+                    @if (item.Ttl != 0)
+                    {
+                        @TimeSpan.FromSeconds(item.Ttl).Humanize()
+                    }
+                    else
+                    {
+                        <p>-</p>
+                    }
+                </td>
+                <td>
+                    @if (item.LastChecked != null)
+                    {
+                        @(item.LastChecked >= DateTime.Now ? "Now" : (DateTime.Now - (DateTime)item.LastChecked).Humanize() + " ago")
+                    }
+                    else
+                    {
+                        <p>Not yet</p>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+@{
+    var toLeft = 3;
+    var toRight = 3;
+
+}
+<div class="paginationCustom">
+    <div>
+        <a class="btn btn-default" asp-action="Index" asp-route-pageNumber="1"
+           asp-route-search="@Model.Search" asp-route-removed="@Model.Removed" asp-route-signed="@Model.Signed" asp-route-pageSize="@Model.PageSize"
+           asp-route-registryId="@Model.RegistryId" asp-route-dnsId="@Model.DnsId"
+           asp-route-nameserversId="@Model.NameserversId" asp-route-sort="@Model.Sort">
+            <i class="fa fa-angle-left"></i><i class="fa fa-angle-left"></i> 1
+        </a>
+        <a class="btn btn-default @(Model.PageNumber - 100 <= 100 ? " disabled" : "")" asp-action="Index" asp-route-pageNumber="@(Model.PageNumber - 100)"
+           asp-route-search="@Model.Search" asp-route-removed="@Model.Removed" asp-route-signed="@Model.Signed" asp-route-pageSize="@Model.PageSize"
+           asp-route-registryId="@Model.RegistryId" asp-route-dnsId="@Model.DnsId"
+           asp-route-nameserversId="@Model.NameserversId" asp-route-sort="@Model.Sort">
+           <i class="fa fa-angle-left"></i> -100
+        </a>
+        <a class="btn btn-default @(Model.PageNumber - 10 <= 0 ? " disabled" : "")" asp-action="Index" asp-route-pageNumber="@(Model.PageNumber - 10)"
+           asp-route-search="@Model.Search" asp-route-removed="@Model.Removed" asp-route-signed="@Model.Signed" asp-route-pageSize="@Model.PageSize"
+           asp-route-registryId="@Model.RegistryId" asp-route-dnsId="@Model.DnsId"
+           asp-route-nameserversId="@Model.NameserversId" asp-route-sort="@Model.Sort">
+           <i class="fa fa-angle-left"></i> -10
+        </a>
+        <a class="btn btn-default @(!Model.HasPreviousPage ? "disabled" : "")" asp-action="Index" asp-route-pageNumber="@(Model.PageNumber - 1)"
+           asp-route-search="@Model.Search" asp-route-removed="@Model.Removed" asp-route-signed="@Model.Signed" asp-route-pageSize="@Model.PageSize"
+           asp-route-registryId="@Model.RegistryId" asp-route-dnsId="@Model.DnsId"
+           asp-route-nameserversId="@Model.NameserversId" asp-route-sort="@Model.Sort">
+            <i class="fa fa-angle-left"></i> Previous
+        </a>
+    </div>
+    <div>
+        @for (var i = toLeft; i > 0; i--)
+        {
+            if (Model.PageNumber - i > 0)
+            {
+                <a class="btn btn-default" asp-action="Index" asp-route-pageNumber="@(Model.PageNumber - i)"
+                   asp-route-search="@Model.Search" asp-route-removed="@Model.Removed" asp-route-signed="@Model.Signed" asp-route-pageSize="@Model.PageSize"
+                   asp-route-registryId="@Model.RegistryId" asp-route-dnsId="@Model.DnsId"
+                   asp-route-nameserversId="@Model.NameserversId" asp-route-sort="@Model.Sort">
+                    @(Model.PageNumber - i)
+                </a>
+            }
+
+        }
+        <div class="btn" style="cursor: default"> 
+            @(Model.PageNumber)
+        </div>
+
+        @for (var i = 1; i < toRight + 1; i++)
+        {
+            if (Model.PageNumber + i <= Model.TotalPages)
+            {
+                <a class="btn btn-default" asp-action="Index" asp-route-pageNumber="@(Model.PageNumber + i)"
+                   asp-route-search="@Model.Search" asp-route-removed="@Model.Removed" asp-route-signed="@Model.Signed" asp-route-pageSize="@Model.PageSize"
+                   asp-route-registryId="@Model.RegistryId" asp-route-dnsId="@Model.DnsId"
+                   asp-route-nameserversId="@Model.NameserversId" asp-route-sort="@Model.Sort">
+                    @(Model.PageNumber + i)
+                </a>
+            }
+
+        }
+    </div>
+    <div>
+        <a class="btn btn-default @(!Model.HasNextPage ? "disabled" : "")" asp-action="Index" asp-route-pageNumber="@(Model.PageNumber + 1)"
+           asp-route-search="@Model.Search" asp-route-removed="@Model.Removed" asp-route-signed="@Model.Signed" asp-route-pageSize="@Model.PageSize"
+           asp-route-registryId="@Model.RegistryId" asp-route-dnsId="@Model.DnsId"
+           asp-route-nameserversId="@Model.NameserversId" asp-route-sort="@Model.Sort">
+            Next <i class="fa fa-angle-right"></i>
+        </a>
+
+        <a class="btn btn-default @(Model.PageNumber + 10 > Model.TotalPages ? " disabled" : "")" asp-action="Index" asp-route-pageNumber="@(Model.PageNumber + 10)"
+           asp-route-search="@Model.Search" asp-route-removed="@Model.Removed" asp-route-signed="@Model.Signed" asp-route-pageSize="@Model.PageSize"
+           asp-route-registryId="@Model.RegistryId" asp-route-dnsId="@Model.DnsId"
+           asp-route-nameserversId="@Model.NameserversId" asp-route-sort="@Model.Sort">
+            +10 <i class="fa fa-angle-right"></i>
+        </a>
+
+        <a class="btn btn-default @(Model.PageNumber + 100 > Model.TotalPages ? " disabled" : "")" asp-action="Index" asp-route-pageNumber="@(Model.PageNumber + 100)"
+           asp-route-search="@Model.Search" asp-route-removed="@Model.Removed" asp-route-signed="@Model.Signed" asp-route-pageSize="@Model.PageSize"
+           asp-route-registryId="@Model.RegistryId" asp-route-dnsId="@Model.DnsId"
+           asp-route-nameserversId="@Model.NameserversId" asp-route-sort="@Model.Sort">
+            +100 <i class="fa fa-angle-right"></i>
+        </a>
+
+        <a class="btn btn-default" asp-action="Index" asp-route-pageNumber="@Model.TotalPages"
+           asp-route-search="@Model.Search" asp-route-removed="@Model.Removed" asp-route-signed="@Model.Signed" asp-route-pageSize="@Model.PageSize"
+           asp-route-registryId="@Model.RegistryId" asp-route-dnsId="@Model.DnsId"
+           asp-route-nameserversId="@Model.NameserversId" asp-route-sort="@Model.Sort">
+            @Model.TotalPages <i class="fa fa-angle-right"></i><i class="fa fa-angle-right"></i>
+        </a>
+    </div>
+</div>
+<div class="paginationCustom paginationCustom--center">
+    <div class="dropdown">
+        <button class="btn bg-white dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            @Model.PageSize
+        </button>
+        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+            <a class="dropdown-item" asp-action="Index" asp-route-pageNumber="1"
+               asp-route-search="@Model.Search" asp-route-removed="@Model.Removed" asp-route-signed="@Model.Signed"
+               asp-route-registryId="@Model.RegistryId" asp-route-dnsId="@Model.DnsId"
+               asp-route-nameserversId="@Model.NameserversId" asp-route-sort="@Model.Sort" asp-route-pageSize="10">
+                10
+            </a>
+            <a class="dropdown-item" asp-action="Index" asp-route-pageNumber="1"
+               asp-route-search="@Model.Search" asp-route-removed="@Model.Removed" asp-route-signed="@Model.Signed"
+               asp-route-registryId="@Model.RegistryId" asp-route-dnsId="@Model.DnsId"
+               asp-route-nameserversId="@Model.NameserversId" asp-route-sort="@Model.Sort" asp-route-pageSize="25">
+                25
+            </a>
+            <a class="dropdown-item" asp-action="Index" asp-route-pageNumber="1"
+               asp-route-search="@Model.Search" asp-route-removed="@Model.Removed" asp-route-signed="@Model.Signed"
+               asp-route-registryId="@Model.RegistryId" asp-route-dnsId="@Model.DnsId"
+               asp-route-nameserversId="@Model.NameserversId" asp-route-sort="@Model.Sort" asp-route-pageSize="50">
+                50
+            </a>
+            <a class="dropdown-item" asp-action="Index" asp-route-pageNumber="1"
+               asp-route-search="@Model.Search" asp-route-removed="@Model.Removed" asp-route-signed="@Model.Signed"
+               asp-route-registryId="@Model.RegistryId" asp-route-dnsId="@Model.DnsId"
+               asp-route-nameserversId="@Model.NameserversId" asp-route-sort="@Model.Sort" asp-route-pageSize="100">
+                100
+            </a>
+            <a class="dropdown-item" asp-action="Index" asp-route-pageNumber="1"
+               asp-route-search="@Model.Search" asp-route-removed="@Model.Removed" asp-route-signed="@Model.Signed"
+               asp-route-registryId="@Model.RegistryId" asp-route-dnsId="@Model.DnsId"
+               asp-route-nameserversId="@Model.NameserversId" asp-route-sort="@Model.Sort" asp-route-pageSize="1000">
+                1000
+            </a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+
+    <environment names="Development">
+        <script src="~/js/Domains.js" asp-append-version="true"></script>
+
+    </environment>
+    <environment names="Staging,Production">
+        <script src="~/js/Domains.min.js" asp-append-version="true"></script>
+    </environment>
+}
+@* <div class="paginationCustom"> *@
+@*     <a class="btn btn-default @(!Model.HasPreviousPage ? "disabled" : "")" asp-action="Index" asp-route-search="@Model.Search" asp-route-removed="@Model.Removed" asp-route-signed="@Model.Signed" asp-route-pageSize="@Model.PageSize" asp-route-pageNumber="@(Model.PageNumber - 1)" asp-route-registryId="@Model.RegistryId" asp-route-dnsId="@Model.DnsId" asp-route-nameserversId="@Model.NameserversId" asp-route-sort="@Model.Sort"> *@
+@*         <i class="fa fa-angle-left"></i> Previous *@
+@*     </a> *@
+@*     Page @(Model.PageNumber) / @(Model.TotalPages) *@
+@*     <a class="btn btn-default @(!Model.HasNextPage ? "disabled" : "")" asp-action="Index" asp-route-search="@Model.Search" asp-route-removed="@Model.Removed" asp-route-signed="@Model.Signed" asp-route-pageSize="@Model.PageSize" *@
+@*        asp-route-pageNumber="@(Model.PageNumber + 1)" asp-route-registryId="@Model.RegistryId" asp-route-dnsId="@Model.DnsId" *@
+@*        asp-route-nameserversId="@Model.NameserversId" asp-route-sort="@Model.Sort"> *@
+@*         Next <i class="fa fa-angle-right"></i> *@
+@*     </a> *@
+@* </div> *@
+

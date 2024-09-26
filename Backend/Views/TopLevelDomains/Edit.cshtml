@@ -1,0 +1,43 @@
+﻿@model Backend.ViewModels.EditTopLevelDomainViewModel
+
+@{
+    ViewData["Title"] = "Edit ." + Model.Tld;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1>TopLevelDomain <strong>.@Model.Tld</strong></h1>
+
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Edit">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="Tld" />
+            <div class="form-group">
+                <label class="control-label">Override DNSSEC Algorithm?</label>
+                <select class="form-control" name="OverrideAlgorithmId" id="OverrideAlgorithmId">
+                    <!option @(Model.OverrideAlgorithmId == null || Model.OverrideAlgorithmId == 0 ? "selected" : "") value="0">Use application default algorithm</!option>
+                    @foreach (var x in Model.Algorithms)
+                    {
+                        <!option @(Model.OverrideAlgorithmId == x.Id ? "selected" : "") value="@x.Id">@x.Name ( @x.Number )</!option>
+                    }
+                </select>
+                <span class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <p>If you change the Algorithm for a TLD, the connected domains are not automatically changed, you need to manually start a DNSSEC Rollover for these domains.</p>
+            </div>
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+

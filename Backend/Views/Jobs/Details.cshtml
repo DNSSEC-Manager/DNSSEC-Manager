@@ -1,0 +1,78 @@
+﻿@model Backend.Models.Job
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+<h1>Details</h1>
+
+<div>
+    <h4>Job</h4>
+    <hr />
+    <div class="row">
+        <div class="col-sm-3">
+            @Html.DisplayNameFor(model => model.Task)
+        </div>
+        <div class="col-sm-9">
+            @Html.DisplayFor(model => model.Task)
+        </div>
+        <div class="col-sm-3">
+            Attached DNS Server
+        </div>
+        <div class="col-sm-9">
+            @(Model.DnsServerId != null ? Model.DnsServer.Name : "None")
+        </div>
+        <div class="col-sm-3">
+            Attached Domain
+        </div>
+        <div class="col-sm-9">
+            @(Model.DomainId != null ? Model.Domain.Name : "None")
+        </div>
+        <div class="col-sm-3">
+            Permanent
+        </div>
+        <div class="col-sm-9">
+            @(Model.IsPermanent ? "Yes" : "No")
+        </div>
+        <div class="col-sm-3">
+            Successful
+        </div>
+        <div class="col-sm-9">
+            @(Model.IsSuccessful ? "Yes" : "No")
+        </div>
+        <div class="col-sm-3">
+            Completed
+        </div>
+        <div class="col-sm-9">
+            @(Model.IsCompleted ? "Yes" : "No")
+        </div>
+        <div class="col-sm-3">
+            Created
+        </div>
+        <div class="col-sm-9">
+            @Html.DisplayFor(model => model.CreatedAt)
+        </div>
+        <div class="col-sm-3">
+            Next Execution
+        </div>
+        <div class="col-sm-9">
+            @(Model.IsPermanent || (!Model.IsPermanent && !Model.IsSuccessful) ? Model.RunAfter.ToString() : "None")
+        </div>
+        <div class="col-sm-3">
+            Last execution
+        </div>
+        <div class="col-sm-9">
+            @(Model.UpdatedAt != DateTime.MinValue ? Model.UpdatedAt.ToString() : "Not yet")
+        </div>
+    </div>
+</div>
+@*<div>
+    @if (!Model.IsCompleted && !Model.IsPermanent)
+    {
+        <a class="btn btn-danger" asp-action="Details" asp-route-id="@Model.Id">Cancel this job</a>
+    }
+</div>*@
+<div>
+    <a asp-action="Edit" asp-route-id="@Model.Id">Edit</a> |
+    <a asp-action="Index">Back to List</a>
+</div>

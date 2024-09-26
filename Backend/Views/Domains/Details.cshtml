@@ -1,0 +1,642 @@
+﻿@using Humanizer
+@model Backend.ViewModels.DomainsDetailsViewModel
+
+@{
+    ViewData["Title"] = @Model.Domain.Name;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+
+    <environment names="Development">
+        @* <link href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.css" rel="stylesheet"> *@
+    </environment>
+    <environment names="Staging,Production">
+        <link href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css" rel="stylesheet">
+    </environment>
+}
+
+@if (!Model.HasDnsConnection)
+{
+    <div class="alert alert-danger alertCross">
+        <p class="alertCross__text">
+            The DNS server could not be reached, some functions are not available
+        </p>
+        <button class="btn btn-link alertCross__cross">
+            <i class="fas fa-times"></i>
+        </button>
+
+    </div>
+}
+
+@if (!Model.HasDnsInfo)
+{
+    <div class="alert alert-danger alertCross">
+        <p class="alertCross__text">
+            Could not get the domain info from the DNS Server, check the DNS server logs
+        </p>
+        <button class="btn btn-link alertCross__cross">
+            <i class="fas fa-times"></i>
+        </button>
+
+    </div>
+}
+
+<h1>@Model.Domain.Name</h1>
+
+<div>
+    <h4>General info</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-3">
+            DNS server
+        </dt>
+        <dd class="col-sm-9">
+            <a class="txtblack" href="~/DnsServers/Details/@Model.Domain.DnsServerId">@Html.DisplayFor(model => model.Domain.DnsServer.Name)</a>
+        </dd>
+        <dt class="col-sm-3">
+            @Html.DisplayNameFor(model => model.Domain.Registry)
+        </dt>
+        <dd class="col-sm-9">
+            @if (Model.Domain.Registry == null)
+            {
+                @("Not found")
+            }
+            else
+            {
+                <a class="txtblack" href="~/Registries/Details/@Model.Domain.CustomRegistryId">@Html.DisplayFor(model => model.Domain.Registry.Name)</a>
+            }
+        </dd>
+        <dt class="col-sm-3">
+            Nameserver group
+        </dt>
+        <dd class="col-sm-9">
+            @if (Model.Domain.NameServerGroup == null)
+            {
+                @("No match")
+            }
+            else
+            {
+                <a class="txtblack" href="~/Nameservers/Details/@Model.Domain.NameServerGroupId">@Html.DisplayFor(model => model.Domain.NameServerGroup.Name)</a>
+            }
+        </dd>
+        @if (Model.Domain.NameServerGroup != null)
+        {
+            <dt class="col-sm-3">
+                Nameservers
+            </dt>
+            <dd class="col-sm-9">
+                @foreach (var nameserver in Model.Domain.NameServerGroup.NameServers)
+                {
+                    <txt>@nameserver.Name<br /></txt>
+                }
+
+            </dd>
+        }
+        <dt class="col-sm-3">
+            Removed From DNS server
+        </dt>
+        <dd class="col-sm-9 @(Model.Domain.RemovedFromDnsServer ? "text-danger" : "txtblack" )">
+            @(Model.Domain.RemovedFromDnsServer ? "Removed" : "No" )
+        </dd>
+        <dt class="col-sm-3">
+            DNSSEC Status
+        </dt>
+        <dd style="margin-top: 5px;" class="col-sm-9 @(Model.Domain.SignMatch ? " text-success" : "text-danger" )">
+            <span class="label @(!Model.Domain.SignMatch ? " label--red" : "label--green" )">
+                @(Model.Domain.SignMatch ? "Signed" : "Unsigned")
+            </span>
+            &nbsp;&nbsp;@(Model.IsSigning ? "(Domain is in signing process)" : "") @(Model.IsInRollover ? "(Domain is in rollover process)" : "") @(Model.IsUnsigning ? "(Domain is in unsigning process)" : "")
+        </dd>
+        <dt class="col-sm-3">
+            Date added
+        </dt>
+        <dd class="col-sm-9">
+            @Model.Domain.CreatedAt (@(Model.Domain.CreatedAt >= DateTime.Now ? "Now" : (DateTime.Now - (DateTime)Model.Domain.CreatedAt).Humanize() + " ago"))
+        </dd>
+        <dt class="col-sm-3">
+            Date signed
+        </dt>
+        <dd class="col-sm-9">
+            @{ if (Model.Domain.SignedAt == DateTime.MinValue || Model.Domain.SignedAt == null)
+                {
+                    <txt>Not yet</txt>
+                }
+                else
+                {
+                    @Model.Domain.SignedAt <txt>(</txt>@((DateTime.Now - (DateTime)Model.Domain.SignedAt).Humanize()) <txt> ago)</txt>
+
+                }
+            }
+
+        </dd>
+        <dt class="col-sm-3">
+            Last checked
+        </dt>
+        <dd class="col-sm-9">
+
+            @if (Model.Domain.LastChecked != null)
+            {
+                <span>
+                    @Model.Domain.LastChecked (@(Model.Domain.LastChecked >= DateTime.Now ? "Now" : (DateTime.Now - (DateTime)Model.Domain.LastChecked).Humanize() + " ago"))
+                </span>
+            }
+            else
+            {
+                @("Not yet")
+            }
+        </dd>
+        <dt class="col-sm-3">
+            DNS Replication Type
+        </dt>
+        <dd class="col-sm-9">
+            @Model.DomainType
+            @if (Model.DomainType != null)
+            {
+                <button class="btn btn-link btn-nopad js-edit-kind"><i class="fa fa-edit" aria-hidden="true"></i></button>
+            }
+
+        </dd>
+        @if (Model.DomainType == "Slave")
+        {
+            <dt class="col-sm-3">
+                Master IP adress(es)
+            </dt>
+            <dd class="col-sm-9">
+                @for (var x = 0; x < Model.MasterIps.Count; x++)
+                {
+                    @Model.MasterIps[x] @(x < Model.MasterIps.Count - 1 ? ", " : "")
+                }
+                <button class="btn btn-link btn-nopad js-edit-ips"><i class="fa fa-edit" aria-hidden="true"></i></button>
+
+            </dd>
+        }
+        <dt class="col-sm-3">Exclude from signing</dt>
+        <dd class="col-sm-9">
+            <style>
+                .toggle.w100 {
+                    width: 100px;
+                }
+            </style>
+            <!-- Default unchecked -->
+            <div class="custom-control custom-checkbox custom-control-inline">
+                <input type="checkbox" data-domainid="@Model.Domain.Id" @(Model.Domain.ExcludeSigning ? "checked" : "" ) class="custom-control-input" id="toggleExcludeSigning">
+                <label class="custom-control-label" for="toggleExcludeSigning"></label>
+            </div>
+            @* <input data-domainid="@Model.Domain.Id" id="toggleExcludeSigning" data-style="w100" type="checkbox" data-on="Exclude" data-off="Include" @(Model.Domain.ExcludeSigning ? "checked" : "" ) data-toggle="toggle" data-onstyle="secondary" data-offstyle="secondary"> *@
+        </dd>
+
+
+    </dl>
+</div>
+
+<br />
+
+<h4>Actions</h4>
+<hr />
+
+<div class="margin20">
+    @if (Model.HasDnsConnection && Model.HasDnsInfo)
+    {
+        <span class="d-inline-block" tabindex="0" data-toggle="tooltip" style="margin-top:5px;" title="Checks if the domain is found on a registry, nameservers are checked and dnssec status is checked">
+            <button data-id="@Model.Domain.Id" class="btn btn-success js-btn-checkNow">Check now</button>
+        </span>
+
+        <span class="d-inline-block" tabindex="0" data-toggle="tooltip" style="margin-top:5px;" title="Retrieve slave zone from its master">
+            <button data-id="@Model.Domain.Id" class="btn btn-primary js-btn-retrieve @(Model.DomainType == " Master" || Model.DomainType == "Native" ? "disabled" : "" ) ">Retrieve</button>
+        </span>
+
+        <span class="d-inline-block" tabindex="0" data-toggle="tooltip" style="margin-top:5px;" title="Send a DNS NOTIFY to all slaves">
+            <button data-id="@Model.Domain.Id" class="btn btn-primary js-btn-notify @(Model.DomainType == " Slave" || Model.DomainType == "Native" ? "disabled" : "" )">Notify slaves</button>
+        </span>
+
+        @*https://github.com/PowerDNS/pdns/issues/6865*@
+        <span class="d-inline-block" tabindex="0" data-toggle="tooltip" style="margin-top:5px;" title="Verify zone contents/configuration">
+            <button data-id="@Model.Domain.Id" class="btn btn-primary js-btn-verify">Verify</button>
+        </span>
+
+        <span class="d-inline-block" tabindex="0" data-toggle="tooltip" style="margin-top:5px;" title="Regenerate DNSSEC data (RRSIG and NSEC records)">
+            <button data-id="@Model.Domain.Id" class="btn btn-primary js-btn-rectify @(Model.DomainType == " Slave" ? "disabled" : "" )">Rectify</button>
+        </span>
+
+        @if (Model.Domain.RemovedFromDnsServer)
+        {
+            <!--<span class="d-inline-block" tabindex="0" data-toggle="tooltip" title="Already deleted">
+                <button type="button"--> @*data-id="@item.Id"*@ <!--class="btn btn-danger disabled"><span class="fas fa-trash"></span> Delete</button>
+            </span>-->
+        }
+        else
+        {
+            <span class="d-inline-block" tabindex="0" data-toggle="tooltip" style="margin-top:5px;" title="Deletes this zone from DNS Server (and all attached metadata and rrsets)">
+                <button data-toggle="modal" data-target="#deleteFromDnsModal" class="btn btn-danger">Delete from DNS Server</button>
+            </span>
+        }
+
+    }
+
+    @if (Model.Domain.RemovedFromDnsServer)
+    {
+        <span class="d-inline-block" tabindex="0" data-toggle="tooltip" style="margin-top:5px;" title="Deletes this zone from our database">
+            <button data-toggle="modal" data-target="#deleteFromDbModal" class="btn btn-danger @(Model.Domain.RemovedFromDnsServer ? "" : "disabled" )">Delete from application</button>
+        </span>
+    }
+    else
+    {
+        <!--<span class="d-inline-block" tabindex="0" data-toggle="tooltip" title="Delete from DNS Server first">
+            <button type="button"--> @*data-id="@item.Id"*@ <!--class="btn btn-danger disabled"><span class="fas fa-trash"></span> Delete</button>
+        </span>-->
+    }
+
+
+</div>
+
+
+<div class="modal fade" id="deleteFromDbModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Are you sure you want to delete this domain from our database?</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                This action can not be undone
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+                <button data-id="@Model.Domain.Id" type="button" class="btn btn-primary js-btn-delete-db">Yes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteFromDnsModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Are you sure you want to delete this domain from your DNS server?</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                This action can not be undone
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+                <button data-id="@Model.Domain.Id" type="button" class="btn btn-primary js-btn-delete-dns">Yes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="js-notifyRectifyError alert alert-secondary alertCross disnone">
+    <p class="alertCross__text">
+
+    </p>
+    <button class="btn btn-link alertCross__cross">
+        <i class="fas fa-times"></i>
+    </button>
+
+</div>
+
+<br />
+
+@if (!Model.Domain.RemovedFromDnsServer)
+{
+    <div>
+        <h4>DNSSEC Keys</h4>
+        <table class="table table-setWidth">
+            <thead>
+                <tr>
+                    <th style="width: 10%">Flag</th>
+                    <th style="width: 10%">Algorithm</th>
+                    <th style="width: 60%">Key</th>
+                    <th style="width: 10%">On Dns server</th>
+                    <th style="width: 10%">On Registry</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Dnssecs)
+                {
+                    <tr>
+                        <td>@item.Flag</td>
+                        <td>@item.Algo</td>
+                        <td>@item.Key</td>
+                        <td>
+                            @{ if (item.OnDns == true)
+                                {
+                                    <i class="fa fa-check" style="color:#28a745;" aria-hidden="true"></i>
+
+                                }
+                                else
+                                {
+                                    <i class="fa fa-times" style="color:#dc3545;" aria-hidden="true"></i>
+                                }
+                            }
+                        </td>
+                        <td>
+                            @{ if (item.OnRegistry == true)
+                                {
+                                    <i class="fa fa-check" style="color:#28a745;" aria-hidden="true"></i>
+
+                                }
+                                else
+                                {
+                                    <i class="fa fa-times" style="color:#dc3545;" aria-hidden="true"></i>
+                                }
+                            }
+                        </td>
+                    </tr>
+
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="margin20">
+        <button data-id="@Model.Domain.Id" style="margin-top:5px;" class="btn btn-success js-btn-sign">Sign Domain</button>
+        <button data-id="@Model.Domain.Id" style="margin-top:5px;" class="btn btn-primary js-btn-rollover">Key Rollover Domain</button>
+        <button data-id="@Model.Domain.Id" style="margin-top:5px;" class="btn btn-danger js-btn-unsign">Unsign Domain</button>
+    </div>
+
+    <div class="js-signError alert alert-secondary alertCross disnone">
+        <p class="alertCross__text">
+
+        </p>
+        <button class="btn btn-link alertCross__cross">
+            <i class="fas fa-times"></i>
+        </button>
+
+    </div>
+
+    <br />
+
+    if (Model.HasDnsConnection && Model.HasDnsInfo)
+    {
+        <div>
+            <h4>DNS Records</h4>
+            <table class="table table-setWidth">
+                <thead>
+                    <tr>
+                        <th style="width: 20%">Name</th>
+
+                        <th style="width: 10%">Type</th>
+                        <th style="width: 40%">Content</th>
+
+                        <th style="width: 10%">Time To Live</th>
+                        @if (Model.DomainType == "Master" || Model.DomainType == "Native")
+                        {
+                            <th style="width: 5%"></th>
+                            <th style="width: 5%"></th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Rrsets)
+                    {
+                        foreach (var record in item.Records)
+                        {
+                            <tr>
+                                <td>
+                                    <p class="js-edit-text js-editTextName">
+                                        @item.Name
+                                    </p>
+                                    <input type="text" name="editName" value="@item.Name" class="js-edit-txb disnone" />
+                                </td>
+                                <td>
+                                    <p class="">
+                                        @item.Type
+                                    </p>
+                                </td>
+                                <td>
+                                    <p class="js-edit-text js-editTextContent">
+                                        @record.Content
+                                    </p>
+                                    <input type="text" name="editContent" value="@record.Content" class="js-edit-txb disnone" />
+                                </td>
+                                <td>
+                                    <p class="js-edit-text js-editTextTtl">
+                                        @item.Ttl
+                                    </p>
+                                    <input type="number" name="editTtl" value="@item.Ttl" class="js-edit-txb disnone" />
+                                </td>
+
+                                @if (Model.DomainType == "Master" || Model.DomainType == "Native")
+                                {
+                                    <td>
+                                        @if (item.Type != "SOA")
+                                        {
+                                            <button class="btn btn-link js-delete-rrset" data-id="@Model.Domain.Id" data-name="@item.Name" data-type="@item.Type" data-content="@record.Content">
+                                                <i class="fa fa-trash" aria-hidden="true"></i>
+                                            </button>
+
+
+                                        }
+                                        <button class="btn btn-link js-save-rrset-edit disnone" data-id="@Model.Domain.Id" data-name="@item.Name" data-ttl="@item.Ttl" data-type="@item.Type" data-content="@record.Content">
+                                            <i class="fa fa-save" aria-hidden="true"></i>
+                                        </button>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-link js-edit-rrset">
+                                            <i class="far fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-link js-stop-edit-rrset disnone">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </td>
+                                }
+
+                            </tr>
+                            <tr class="alert alert-danger disnone js-edit-error" data-id="@Model.Domain.Id">
+                                <td colspan="3"></td>
+                                <td colspan="2">
+                                    <button class="btn btn-primary js-confirm-edit-ttl" type="button">Confirm anyway</button>
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-link js-edit-error-dismiss">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        if (Model.DomainType == "Master" || Model.DomainType == "Native")
+        {
+            <div class="margin20">
+                <button class="btn btn-primary js-btn-add-rrset">
+                    <i class="fas fa-plus"></i> Add record
+                </button>
+            </div>
+        }
+
+    }
+}
+<div class="modal" tabindex="-1" role="dialog" id="addRrsetModal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Fill in the details of the new record</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="inpName">Name</label>
+                    <input type="text" class="form-control" id="inpName" value="@Model.Domain.Name." placeholder="Enter record name">
+                </div>
+                <div class="form-group">
+                    <label for="inpType">Type</label>
+                    <select class="form-control" id="inpType">
+                        <option>A</option>
+                        <option>AAAA</option>
+                        <option>CNAME</option>
+                        <option>MX</option>
+                        <option>NS</option>
+                        <option>TXT</option>
+                        <option>SRV</option>
+                        <option>PTR</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="inpContent">Content</label>
+                    <input type="text" class="form-control" id="inpContent" placeholder="Enter record content">
+                </div>
+                <div class="form-group">
+                    <label for="inpTtl">Time To Live</label>
+                    <input type="number" class="form-control" id="inpTtl" value="@Model.Domain.Ttl" placeholder="Time To Live">
+                </div>
+
+                <div class="js-addRrsetError alert alert-secondary alertCross disnone">
+                    <div>
+                        <p class="alertCross__text">
+
+                        </p>
+                        <button class="btn btn-primary" id="replace-confirm">Yes</button>
+                    </div>
+                    <button class="btn btn-link alertCross__cross">
+                        <i class="fas fa-times"></i>
+                    </button>
+
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary add-rrset-confirm" id="" data-id="@Model.Domain.Id">Create</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" tabindex="-1" role="dialog" id="editKindModal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">What type of domains is this?</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <select class="form-control" id="editKindType">
+                    <option selected="@(Model.DomainType == " Slave")">Slave</option>
+                    <option selected="@(Model.DomainType == " Master")">Master</option>
+                    <option selected="@(Model.DomainType == " Native")">Native</option>
+                </select>
+                <div class="js-editKindError alert alert-secondary alertCross disnone">
+                    <div>
+                        <p class="alertCross__text">
+
+                        </p>
+                    </div>
+                    <button class="btn btn-link alertCross__cross">
+                        <i class="fas fa-times"></i>
+                    </button>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary js-saveKindConfirm" data-id="@Model.Domain.Id">Save</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" tabindex="-1" role="dialog" id="editIpsModal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">What type of domains is this?</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Enter the IP addresses seperated by a comma (Whitespaces do not matter)</p>
+                <input type="text" name="editIps" id="editIpsTxb" value="@(string.Join(" , ", Model.MasterIps))" />
+                <div class="js-editIpsError alert alert-secondary alertCross disnone">
+                    <div>
+                        <p class="alertCross__text">
+
+                        </p>
+                    </div>
+                    <button class="btn btn-link alertCross__cross">
+                        <i class="fas fa-times"></i>
+                    </button>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary js-saveIpsConfirm" data-id="@Model.Domain.Id">Save</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" tabindex="-1" role="dialog" id="deleteRrsetModal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Are you sure you want to delete this RRSET?</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>The record will be permanently deleted</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="delete-rrset-confirm">Yes</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+
+    <environment names="Development">
+        <script src="~/js/DomainDetails.js" asp-append-version="true"></script>
+        <script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.js"></script>
+        <script>
+//        $('#toggle-demo').bootstrapToggle()
+        </script>
+
+    </environment>
+    <environment names="Staging,Production">
+        <script src="~/js/DomainDetails.min.js" asp-append-version="true"></script>
+        @* <script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script> *@
+        <script>
+//        $('#toggle-demo').bootstrapToggle()
+        </script>
+    </environment>
+}

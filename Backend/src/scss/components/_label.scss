@@ -1,0 +1,14 @@
+﻿.label {
+    padding: 5px 10px;
+    border-radius: 5px;
+    color: white;
+
+    &--red {
+        background-color: #dc3545;
+    }
+
+    &--green {
+        background-color: #28a745;
+
+    }
+}

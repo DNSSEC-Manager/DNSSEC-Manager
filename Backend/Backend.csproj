@@ -1,0 +1,106 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <UserSecretsId>aspnet-Backend-26E5DBE2-3A4A-4720-9387-BF2F6167776A</UserSecretsId>
+    <Company>DNSSEC Manager</Company>
+    <Product>DNSSEC Manager</Product>
+    <Authors>Paul Hermans, Dylan Bos</Authors>
+    <PackageProjectUrl></PackageProjectUrl>
+    <Version>2.0.0</Version>
+    <PackageId>DNSSEC Manager</PackageId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Data\Migrations\20190204103541_Domain-Model-Added.cs" />
+    <Compile Remove="Data\Migrations\20190204103541_Domain-Model-Added.Designer.cs" />
+    <Compile Remove="Data\Migrations\20190208140356_AddedSeveralModels.cs" />
+    <Compile Remove="Data\Migrations\20190208140356_AddedSeveralModels.Designer.cs" />
+    <Compile Remove="Data\Migrations\20190311125430_settings.cs" />
+    <Compile Remove="Data\Migrations\20190311125430_settings.Designer.cs" />
+    <Compile Remove="Data\Migrations\20190311131810_settings.cs" />
+    <Compile Remove="Data\Migrations\20190311131810_settings.Designer.cs" />
+    <Compile Remove="Data\Migrations\20190326094935_crytpkeys.cs" />
+    <Compile Remove="Data\Migrations\20190326094935_crytpkeys.Designer.cs" />
+    <Compile Remove="Data\Migrations\20190327135858_test.cs" />
+    <Compile Remove="Data\Migrations\20190327135858_test.Designer.cs" />
+    <Compile Remove="Data\Migrations\20190328132805_dnsServerType.cs" />
+    <Compile Remove="Data\Migrations\20190328132805_dnsServerType.Designer.cs" />
+    <Compile Remove="Data\Migrations\20190329135144_nameserversUpdate.cs" />
+    <Compile Remove="Data\Migrations\20190329135144_nameserversUpdate.Designer.cs" />
+    <Compile Remove="Data\Migrations\20190329153623_test.cs" />
+    <Compile Remove="Data\Migrations\20190329153623_test.Designer.cs" />
+    <Compile Remove="Data\Migrations\20190404081446_dnsServerForeignKeyOrder.cs" />
+    <Compile Remove="Data\Migrations\20190404081446_dnsServerForeignKeyOrder.Designer.cs" />
+    <Compile Remove="Data\Migrations\20190404140940_configsq.cs" />
+    <Compile Remove="Data\Migrations\20190404140940_configsq.Designer.cs" />
+    <Compile Remove="Data\Migrations\20190404141047_configsqq.cs" />
+    <Compile Remove="Data\Migrations\20190404141047_configsqq.Designer.cs" />
+    <Compile Remove="Data\Migrations\20190416142554_Algorithms-and-bits-added.cs" />
+    <Compile Remove="Data\Migrations\20190416142554_Algorithms-and-bits-added.Designer.cs" />
+    <Compile Remove="Data\Migrations\20190416145913_Added-Cryptokey-to-Job.cs" />
+    <Compile Remove="Data\Migrations\20190416145913_Added-Cryptokey-to-Job.Designer.cs" />
+    <Compile Remove="Data\Migrations\20190418135318_logging-model-added.cs" />
+    <Compile Remove="Data\Migrations\20190418135318_logging-model-added.Designer.cs" />
+    <Compile Remove="Data\Migrations\20190502100316_error-fix.cs" />
+    <Compile Remove="Data\Migrations\20190502100316_error-fix.Designer.cs" />
+    <Compile Remove="Data\Migrations\20190504105133_test123.cs" />
+    <Compile Remove="Data\Migrations\20190504105133_test123.Designer.cs" />
+    <Compile Remove="Data\Migrations\20190520073401_error-migration.cs" />
+    <Compile Remove="Data\Migrations\20190520073401_error-migration.Designer.cs" />
+    <Compile Remove="Data\Migrations\20190521133324_AddJobCheckAllDomains.cs" />
+    <Compile Remove="Data\Migrations\20190521133324_AddJobCheckAllDomains.Designer.cs" />
+    <Compile Remove="Data\Migrations\20190604102650_delete-settings.cs" />
+    <Compile Remove="Data\Migrations\20190604102650_delete-settings.Designer.cs" />
+    <Compile Remove="Data\Migrations\20190605134148_Add-Defaul-tUser.cs" />
+    <Compile Remove="Data\Migrations\20190605134148_Add-Defaul-tUser.Designer.cs" />
+    <Compile Remove="Data\Migrations\20190605135446_Add-Defaul-tUser.cs" />
+    <Compile Remove="Data\Migrations\20190605135446_Add-Defaul-tUser.Designer.cs" />
+    <Compile Remove="Data\Migrations\20200213231157_WebServer-Model-Added.cs" />
+    <Compile Remove="Data\Migrations\20200213231157_WebServer-Model-Added.Designer.cs" />
+    <Compile Remove="Data\Migrations\20201030105059_test20203010.cs" />
+    <Compile Remove="Data\Migrations\20201030105059_test20203010.Designer.cs" />
+    <Compile Remove="Data\Migrations\20201030110050_test20203010.cs" />
+    <Compile Remove="Data\Migrations\20201030110050_test20203010.Designer.cs" />
+    <Compile Remove="Data\Migrations\20201030110149_test20203010.cs" />
+    <Compile Remove="Data\Migrations\20201030110149_test20203010.Designer.cs" />
+    <Compile Remove="Data\Migrations\20201030125451_nameservergroup-dnsserverid-notnull.cs" />
+    <Compile Remove="Data\Migrations\20201030125451_nameservergroup-dnsserverid-notnull.Designer.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="C:\Users\Paul\.nuget\packages\nlog.config\4.7.13\contentFiles\any\any\NLog.config" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <PackageReference Include="DnsClient" Version="1.6.0" />
+    <PackageReference Include="Humanizer.Core" Version="2.14.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="6.0.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="6.0.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="6.0.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="6.0.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="6.0.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="6.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.DataProtection.Abstractions" Version="6.0.2" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="6.0.2" />
+    <PackageReference Include="Nager.PublicSuffix" Version="2.2.2" />
+    <PackageReference Include="RestSharp" Version="106.15.0" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <ProjectReference Include="..\Providers\Providers.csproj" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <Folder Include="wwwroot\css\" />
+  </ItemGroup>
+
+</Project>

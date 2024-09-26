@@ -1,0 +1,17 @@
+﻿input, textarea {
+    padding: 15px;
+    border: 1px solid #ccc;
+    border-radius: 0px;
+    //width: 100%;
+    box-sizing: border-box;
+    font-family: montserrat;
+    color: #2C3E50;
+    font-size: 13px;
+}
+
+input:focus, textarea:focus {
+    box-shadow: none !important;
+    border: 1px solid darken(#ccc, 50%);
+    outline-width: 0;
+    transition: All 0.5s ease-in;
+}

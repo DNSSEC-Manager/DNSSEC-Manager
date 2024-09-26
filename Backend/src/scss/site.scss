@@ -1,0 +1,185 @@
+﻿@import "modules/breakpoints";
+@import "modules/typography";
+@import "modules/normalize";
+@import "modules/helpers";
+
+
+@import 'components/inputs';
+@import 'components/nav';
+@import 'components/multiform';
+@import 'components/footer';
+@import 'components/label';
+@import 'components/nameserverGroup';
+
+.txtblack {
+    color: #212529;
+}
+
+.js-edit-txb{
+    width: 100%;
+}
+.toggle-off {
+    box-shadow: inset 0 3px 5px rgba(0, 0, 0, .125);
+}
+
+.toggle.off {
+    border-color: rgba(0, 0, 0, .25);
+}
+
+.toggle-handle {
+    background-color: white;
+    border: thin rgba(0, 0, 0, .25) solid;
+}
+
+.btn.toggle {
+    padding: 0.075rem 0.75rem;
+    font-size: 0.8rem !important;
+    min-height: 0;
+    height: 25px;
+    .toggle-group {
+        font-size: 0.8rem !important;
+
+        label {
+            padding: 0 0.75rem;
+
+            &.toggle-off {
+                padding-left: 1.3rem;
+            }
+
+            &.toggle-on {
+                padding-right: 1.3rem;
+            }
+        }
+    }
+}
+
+.btn-nopad{
+    padding: 0 !important;
+}
+
+.margin20{
+    margin: 20px 0;
+}
+
+.table {
+    table-layout: fixed;
+    word-wrap: break-word;
+    width: auto;
+
+    &-setWidth {
+        width: 100%;
+    }
+}
+
+.alertCross {
+    position:relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+
+    &__cross {
+        position: absolute;
+        right: -5px;
+        top: 0px;
+        cursor: pointer;
+    }
+
+    &__text {
+        margin: 0;
+    }
+}
+
+.search{
+    width: 50%;
+    &__flex{
+        display:flex;
+    }
+    &__input{
+        height: 1.2rem;
+    }
+}
+
+.paginationCustom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    &--center{
+        justify-content: center;
+    }
+}
+
+.btn-close:hover {
+    text-decoration: none;
+}
+
+@mixin create-keyframe($animationName) {
+    @keyframes #{$animationName} {
+        @content;
+    }
+}
+
+.chartsContainer{
+    display:flex;
+    justify-content: space-around;
+}
+
+.proper-button {
+    background-color: rgba(white, 0);
+    box-shadow: none;
+    border: 0;
+    border: 1px solid #ccc;
+    border-radius: 2px;
+    height: 100%;
+    margin-left: 5px;
+    cursor: pointer;
+}
+
+.custom-form-control {
+    width: 100px;
+    height: calc(2.25rem + 2px);
+}
+
+.noborder-top{
+    border-top: 0 !important;
+}
+
+.tooltip-inner {
+    max-width: 350px;
+    /* If max-width does not work, try using width instead */
+    width: 350px;
+}
+
+.form-check-input{
+    width: auto;
+    margin-left: 0;
+}
+.save-changes {
+    display:flex;
+    align-items: flex-end;
+    &.active:after {
+        content: '';
+        display:inline-block;
+        animation: dots 2s infinite linear;
+    }
+}
+
+@include create-keyframe("dots") {
+    0% {
+        content: "";
+    }
+
+    25% {
+        content: ".";
+    }
+
+    50% {
+        content: "..";
+    }
+    75%{
+        content: "...";
+    }
+    100%{
+        content: "";
+    }
+}

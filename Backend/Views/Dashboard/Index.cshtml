@@ -1,0 +1,220 @@
+﻿@model Backend.ViewModels.DashboardViewModel
+@using Humanizer
+
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+@{
+    decimal percentFound;
+    decimal percentNotFound;
+    decimal percentRemoved;
+    decimal percentNameserver;
+    decimal percentSigned;
+
+    if (Model.DomainCountHasRegistry == 0 || Model.DomainCountTotal == 0)
+    {
+        percentFound = 0;
+    }
+    else
+    {
+        percentFound = ((decimal)Model.DomainCountHasRegistry / (decimal)Model.DomainCountTotal * 100);
+    }
+
+    if (Model.InActiveDomainsCount == 0 || Model.DomainCountTotal == 0)
+    {
+        percentNotFound = 0;
+    }
+    else
+    {
+        percentNotFound = ((decimal) Model.InActiveDomainsCount / (decimal) Model.DomainCountTotal * 100);
+    }
+
+    if (Model.DomainCountRemovedFromDnsServer == 0 || Model.DomainCountTotal == 0)
+    {
+        percentRemoved = 0;
+    }
+    else
+    {
+        percentRemoved = ((decimal)Model.DomainCountRemovedFromDnsServer / (decimal)Model.DomainCountTotal * 100);
+    }
+
+    if (Model.DomainCountNameserversMatch == 0 || Model.DomainCountTotal == 0)
+    {
+        percentNameserver = 0;
+    }
+    else
+    {
+        percentNameserver = ((decimal)Model.DomainCountNameserversMatch / (decimal)Model.DomainCountTotal * 100);
+    }
+
+    if (Model.DomainCountDnssecSigned == 0 || Model.DomainCountTotal == 0)
+    {
+        percentSigned = 0;
+    }
+    else
+    {
+        percentSigned = ((decimal)Model.DomainCountDnssecSigned / (decimal)Model.DomainCountTotal * 100);
+    }
+}
+
+<h1 class="display-4">Dashboard</h1>
+
+<br />
+
+<div>
+    <h4>Domain Statistics</h4>
+    <hr />
+
+    <div class="chartsContainer">
+        <div style="height: 100px; width: 380px;">
+            <canvas id="activeChart" data-removedFromDns="@Model.RemovedDomainsCount" data-active="@Model.ActiveDomainsCount" data-inActive="@Model.InActiveDomainsCount"></canvas>
+        </div>
+        <div style="height: 100px; width: 380px;">
+            <canvas id="signedChart" data-signed="@Model.SignedDomainsCount" data-notsigned="@Model.NotSignedDomainsCount"></canvas>
+        </div>
+    </div>
+
+    <br />
+
+    <dl class="row">
+        <dt class="col-sm-6">
+            Total domains in the system:
+        </dt>
+        <dd class="col-sm-1">
+            <a href="~/Domains">@Model.DomainCountTotal</a>
+        </dd>
+        <dd class="col-sm-5">
+            (100 %)
+        </dd>
+    </dl>
+    <dl class="row">
+        <dt class="col-sm-6">
+            Domains removed from DNS Server:
+        </dt>
+        <dd class="col-sm-1">
+            <a href="~/Domains?removed=1">@Model.DomainCountRemovedFromDnsServer</a>
+        </dd>
+        <dd class="col-sm-5">
+            (@percentRemoved.ToString("N1") %)
+        </dd>
+    </dl>
+    <dl class="row">
+        <dt class="col-sm-6">
+            Domains found at registries:
+        </dt>
+        <dd class="col-sm-1">
+            <a href="~/Domains?registryId=0">@Model.DomainCountHasRegistry</a>
+        </dd>
+        <dd class="col-sm-5">
+            (@percentFound.ToString("N1") %)
+        </dd>
+    </dl>
+    <dl class="row">
+        <dt class="col-sm-6">
+            Domains not found at registries:
+        </dt>
+        <dd class="col-sm-1">
+            <a href="~/Domains?registryId=-1">@Model.InActiveDomainsCount</a>
+        </dd>
+        <dd class="col-sm-5">
+            (@percentNotFound.ToString("N1") %)
+        </dd>
+    </dl>
+    <dl class="row">
+        <dt class="col-sm-6">
+            Domains with matching Nameservers:
+        </dt>
+        <dd class="col-sm-1">
+            <a href="~/Domains?nameserversId=0">@Model.DomainCountNameserversMatch</a>
+        </dd>
+        <dd class="col-sm-5">
+            (@percentNameserver.ToString("N1") %)
+        </dd>
+    </dl>
+    <dl class="row">
+        <dt class="col-sm-6">
+            DNSSEC Signed domains:
+        </dt>
+        <dd class="col-sm-1">
+            <a href="~/Domains?signed=1">@Model.DomainCountDnssecSigned</a>
+        </dd>
+        <dd class="col-sm-5">
+            (@percentSigned.ToString("N1") %)
+        </dd>
+    </dl>
+</div>
+
+<br /><br />
+
+<h2>Last Added Domains</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                Domain
+            </th>
+            <th>
+                Date and Time Added
+            </th>
+            <th>
+                Added
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.LastAddedDomains)
+        {
+            <tr>
+                <td>
+                    <a href="~/Domains/Details/@item.Id">@Html.DisplayFor(modelItem => item.Name)</a>
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.CreatedAt)
+                </td>
+                <td>
+                    @((DateTime.Now - (DateTime)item.CreatedAt).Humanize() + " ago")
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<br /><br />
+
+<h2>Top Level Domains - Top 5</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                TLD
+            </th>
+            <th>Count</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.TopLevelDomains)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Tld)
+                </td>
+                <td>@item.Domains.Count</td>
+            </tr>
+        }
+    </tbody>
+</table>
+<a href="~/TopLevelDomains/">View more TLD's</a>
+
+<br /><br />
+
+@section Scripts {
+    <environment names="Development">
+        <script src="~/js/Dashboard.js" asp-append-version="true"></script>
+    </environment>
+    <environment names="Staging,Production">
+        <script src="~/js/Dashboard.min.js" asp-append-version="true"></script>
+    </environment>
+}

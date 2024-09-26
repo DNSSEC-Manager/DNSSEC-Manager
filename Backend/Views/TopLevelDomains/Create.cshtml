@@ -1,0 +1,33 @@
+﻿@model Backend.Models.TopLevelDomain
+
+@{
+    ViewData["Title"] = "Add Top Level Domain";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1>Add Top Level Domain</h1>
+
+<p>Note: Top Level Domains are automatically added if new ones are discovered, you only need to add a TLD if you want to configure them for a registry.</p>
+
+<hr />
+
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label class="control-label">Top Level Domain (without leading dot)</label>
+                <input asp-for="Tld" placeholder="Examples: com, net, co.uk" class="form-control" />
+                <span asp-validation-for="Tld" class="text-danger">@TempData["Message"]</span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+

@@ -1,0 +1,23 @@
+{
+  "version": "1.0.0",
+  "name": "asp.net",
+  "private": true,
+  "devDependencies": {
+    "gulp": "^4.0.2",
+    "gulp-autoprefixer": "^4.0.0",
+    "gulp-clean-css": "^3.9.0",
+    "gulp-concat": "2.6.1",
+    "gulp-cssmin": "0.2.0",
+    "gulp-folders-4x": "^1.0.1",
+    "gulp-sass": "3.2.1",
+    "gulp-sourcemaps": "^2.6.5",
+    "gulp-uglify": "3.0.0",
+    "gulp-uglify-es": "^0.1.9",
+    "gulp-wait": "0.0.2",
+    "rimraf": "2.6.1"
+  },
+  "dependencies": {
+    "gulp-javascript-obfuscator": "^1.1.6",
+    "gulp-print": "^5.0.2"
+  }
+}

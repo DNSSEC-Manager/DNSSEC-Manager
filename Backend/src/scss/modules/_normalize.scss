@@ -1,0 +1,13 @@
+﻿html {
+    font-size: 14px;
+    position: relative;
+    min-height: 100%;
+
+    @include tablet-up {
+        font-size: 16px;
+    }
+}
+
+body {
+    margin-bottom: 60px;
+}

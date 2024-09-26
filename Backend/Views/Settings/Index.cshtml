@@ -1,0 +1,135 @@
+﻿@{
+    ViewData["Title"] = "Settings";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var algos = ViewBag.Algorithms;
+    var bits = ViewBag.Bits;
+}
+
+<h1>Settings</h1>
+<form method="post" id="settingsForm">
+    @Html.AntiForgeryToken()
+    <table class="table">
+        <thead>
+
+        </thead>
+        <tbody>
+            <tr>
+                <td>Check DNS server for domain changes <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="Every X amount of time it will check the DNS server(s) if there are new/removed domains"></i></td>
+                <td>
+                    Check every
+
+                </td>
+                <td>
+                    <input type="number" name="domainChangesRunEveryHours" class="custom-form-control" value="@ViewBag.domainChangesRunEvery.Hours" /> hours and
+                    <input type="number" class="custom-form-control" name="domainChangesRunEveryMinutes" value="@ViewBag.domainChangesRunEvery.Minutes" /> minutes
+                </td>
+            </tr>
+            <tr>
+                <td>Run a check on domains <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="The top inputs indicate how often we look for the top 50 domains that haven't been checked the longest. The bottom inputs indicate how long we don't check a domain."></i></td>
+                <td>
+                    Check 50 domains every
+
+                </td>
+                <td>
+                    <input type="number" name="checkAllDomainsRunEveryHours" class="custom-form-control" value="@ViewBag.CheckAllDomainsRunEvery.Hours" /> hours and
+                    <input type="number" class="custom-form-control" name="checkAllDomainsRunEveryMinutes" value="@ViewBag.CheckAllDomainsRunEvery.Minutes" /> minutes
+                </td>
+            </tr>
+            <tr>
+                <td class="noborder-top"></td>
+                <td class="noborder-top">
+                    Check individual domains every
+
+                </td>
+                <td class="noborder-top">
+                    <input type="number" name="checkAllDomainsReRunAfterHours" class="custom-form-control" value="@ViewBag.CheckAllDomainsReRunAfter.Hours" /> hours and
+                    <input type="number" class="custom-form-control" name="checkAllDomainsReRunAfterMinutes" value="@ViewBag.CheckAllDomainsReRunAfter.Minutes" /> minutes
+                </td>
+            </tr>
+            <tr>
+                <td>DNSSEC signing</td>
+                <td>
+                    After failing, retry after <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="If for any reason we can't sign/fix a domain it will retry after X amount of time"></i>
+                </td>
+                <td>
+                    <input type="number" name="domainSignFailRerunHours" class="custom-form-control" value="@ViewBag.DomainSignFailRerun.Hours" /> hours and
+                    <input type="number" class="custom-form-control" name="domainSignFailRerunMinutes" value="@ViewBag.DomainSignFailRerun.Minutes" /> minutes
+                </td>
+            </tr>
+            <tr>
+                <td class="noborder-top"></td>
+                <td class="noborder-top">
+                    Automatic DNSSEC signing <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="When a domain is checked and we see that the domain is not signed yet we will automatically sign it"></i>
+                </td>
+                <td class="noborder-top form-check align-left">
+                    <input @(ViewBag.AutomaticSign ? "checked" : "" ) name="automaticSign" type="checkbox" class="form-check-input" id="exampleCheck1">
+                </td>
+            </tr>
+            <tr>
+                <td class="noborder-top"></td>
+                <td class="noborder-top">
+                    Automatic DNSSEC fixing<i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="When a domain is checked and we see that the domain has wrong DNSSEC info we will try to fix it by deleting wrong keys and syncing correct ones"></i>
+                </td>
+                <td class="noborder-top form-check align-left">
+                    <input @(ViewBag.AutomaticFix ? "checked" : "" ) name="automaticFix" type="checkbox" class="form-check-input" id="exampleCheck1">
+                </td>
+            </tr>
+            <tr>
+                <td>Default DNSSEC Options </td>
+                <td>
+                    Algorithm
+                </td>
+                <td>
+                    <select class="form-control" name="DefaultAlgorithm" id="DefaultAlgorithm">
+                        <!option @(ViewBag.DefaultAlgorithm == null || ViewBag.DefaultAlgorithm == 0 ? "selected" : "") value="0">Please choose a default algorithm</!option>
+                        @foreach (var x in algos)
+                        {
+                        <!option @(ViewBag.DefaultAlgorithm == x.Id ? "selected" : "") value="@x.Id">@x.Name ( @x.Number )</!option>
+                        }
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td>Automatic Key Rollover</td>
+                <td>
+                    Automatic Key Rollover <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="If a domain hasn't recieved a new DNSSEC key in x amount of days it will automatically rollover the key"></i>
+                </td>
+                <td class="form-check align-left">
+                    <input @(ViewBag.AutomaticKeyRollover ? "checked" : "" ) name="automaticKeyRollover" type="checkbox" class="form-check-input" id="exampleCheck1">
+                </td>
+            </tr>
+            <tr>
+                <td class="noborder-top"></td>
+                <td class="noborder-top">
+                    Rollover domains every
+                </td>
+                <td class="noborder-top">
+                    <input type="number" name="keyRolloverTime" class="custom-form-control" value="@ViewBag.KeyRolloverTime" /> Days
+                </td>
+            </tr>
+            <tr>
+                <td>Default TTL</td>
+                <td>
+                    Time to live <i class="fas fa-info-circle" data-toggle="tooltip" data-placement="top" title="If the time to live is below this default, the application will use this default."></i>
+                </td>
+                <td class="form-check align-left">
+                    <input type="number" name="defaultTtl" class="custom-form-control" value="@ViewBag.defaultTtl" /> Hours
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="display-flex">
+        <button type="button" class="js-save-changes btn btn-primary">Save changes</button>&nbsp; <div class="save-changes js-saving-progress"></div>
+    </div>
+
+</form>
+
+@section Scripts {
+
+<environment names="Development">
+    <script src="~/js/Settings.js" asp-append-version="true"></script>
+</environment>
+<environment names="Staging,Production">
+    <script src="~/js/Settings.min.js" asp-append-version="true"></script>
+</environment>
+}

@@ -1,0 +1,141 @@
+﻿@model Backend.ViewModels.RegistryDetailsViewModel;
+
+@{
+    ViewData["Title"] = Model.Name;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1>@Model.Name</h1>
+
+<div>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">
+            API Url
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Url)
+        </dd>
+        <dt class="col-sm-2">
+            API Port
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Port)
+        </dd>
+        <dt class="col-sm-2">
+            API Username
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Username)
+        </dd>
+        <dt class="col-sm-2">
+            Server type
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.RegistryType)
+        </dd>
+        <dt class="col-sm-2">
+            Connection
+        </dt>
+        <dd class="col-sm-10">
+            <button type="button" data-id="@Model.Id" class="btn btn-success js-test-connection-registryId"><span class="fas fa-sync"></span> Test API Connection</button>
+            <p>
+                <div style="display:flex;justify-content:space-between;align-items:center;" class="js-connection-error-registry alert alert-secondary alert alert-secondary disnone">
+                    <span class="js-error-message">Connection has not been tested yet</span>
+                    <button style="cursor:pointer; color:gray;" class="btn btn-link js-hide-error btn-close">x</button>
+                </div>
+            </p>
+        </dd>
+    </dl>
+</div>
+
+<div>
+    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning"><span class="fas fa-edit"></span> Edit</a>
+    <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger"><span class="fas fa-trash"></span> Delete</a>
+    <a asp-action="Index" class="btn btn-primary"><span class="fas fa-caret-left"></span> Back to List</a>
+</div>
+
+<br /><br />
+
+<div>
+    <h4>Associated Top Level Domains</h4>
+    <hr />
+    <p>If you connect TLDs here, this registry can only handle these TLDs and nothing else. If you leave this list empty we are checking every domainname for existence with this registry.</p>
+
+    <p>Best practice: configure TLDs for Registries that only handles specific TLDs (like .nl for SIDN and .eu for EURid) and leave empty for Domain Wholesale providers.</p>
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Top Level Domain</th>
+            <th>Delete</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var item in Model.TopLevelDomains)
+        {
+            <tr>
+                <td>.@item.Tld</td>
+                <td>
+                    <button type="button" data-toggle="modal" data-target="#deleteTldRegistryModal" data-tldid="@item.Id" data-regid="@Model.Id" class="btn btn-danger js-delete-tldregistry"><span class="fas fa-trash"></span> Delete</button>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+    <button  data-toggle="modal" data-target="#addTldRegistryModal" class="btn btn-primary"><span class="fas fa-plus"></span> Add Topleveldomain</button>
+</div>
+
+
+<div class="modal" tabindex="-1" role="dialog" id="deleteTldRegistryModal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Are you sure you want to disconnect this Top Level Domain?</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                The connection will be removed
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary js-delete-tldregistry-confirm">Yes</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" tabindex="-1" role="dialog" id="addTldRegistryModal" data-id="@Model.Id">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Which topleveldomain do you want to add to this registry?</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Topleveldomain: <input id="addTldRegistryInp" type="text" name="name" value="" />
+                <div style="display:flex;justify-content:space-between;align-items:center;" class="js-addTldRegistry-error alert alert-secondary d-none">
+                    <span class="js-error-message"></span>
+                    <button style="cursor:pointer; color:gray;" class="btn btn-link js-hide-error btn-close">x</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary js-add-tldregistry-confirm">Save</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+
+    <environment names="Development">
+        <script src="~/js/registry.js" asp-append-version="true"></script>
+    </environment>
+    <environment names="Staging,Production">
+        <script src="~/js/registry.js" asp-append-version="true"></script>
+    </environment>
+}

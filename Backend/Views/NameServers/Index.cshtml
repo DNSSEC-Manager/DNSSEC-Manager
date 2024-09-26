@@ -1,0 +1,71 @@
+﻿@model IEnumerable<Backend.Models.NameServerGroup>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Nameservers</h1>
+
+<br />
+
+@*<p>
+    <a asp-action="Create" class="btn btn-primary"><span class="fas fa-plus"></span> Add Nameserver Group</a>
+</p>*@
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                Nameserver Group Name
+            </th>
+            <th>
+                Nameservers
+            </th>
+            <th>
+                Connected DNS Server
+            </th>
+            <th>
+                Connected Domains
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @*<a asp-action="Details" asp-route-id="@item.Id">@Html.DisplayFor(modelItem => item.Name)</a>*@
+                @Html.DisplayFor(modelItem => item.Name)
+            </td>
+            <td>
+                @foreach (var ns in item?.NameServers)
+                {
+                    <text>@ns.Name<br /></text>
+                }
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.DnsServer.Name)
+            </td>
+            <td>
+                <a asp-controller="Domains" asp-action="Index" asp-route-nameserversid="@item.Id">@item.Domains?.Count</a>
+                @*<a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
+        <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
+        <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>*@
+            </td>
+            <td>
+                <a class="btn btn-primary" asp-action="Edit" asp-route-id="@item.Id">Edit</a>
+                @if (item.Domains?.Count == 0)
+                {
+                    <a class="btn btn-danger" asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                }
+                else
+                {
+                    <span class="d-inline-block" tabindex="0" data-toggle="tooltip" title="You cannot delete a Nameserver Group with connected domains">
+                        <a class="btn btn-danger disabled" asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                    </span>
+                }
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
