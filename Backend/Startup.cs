@@ -86,10 +86,10 @@ namespace Backend
             app.UseDeveloperExceptionPage();
             app.UseMigrationsEndPoint();
 
-            if (env.IsProduction())
-            {
-                app.UseHttpsRedirection();
-            }
+            //if (env.IsProduction())
+            //{
+                //app.UseHttpsRedirection();
+            //}
             app.UseStaticFiles();
 
             app.UseRouting();
