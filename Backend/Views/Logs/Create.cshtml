@@ -1,0 +1,64 @@
+﻿@model Backend.Models.Log
+
+@{
+    ViewData["Title"] = "Create";
+}
+
+<h1>Create</h1>
+
+<h4>Log</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="Message" class="control-label"></label>
+                <input asp-for="Message" class="form-control" />
+                <span asp-validation-for="Message" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="RawMessage" class="control-label"></label>
+                <input asp-for="RawMessage" class="form-control" />
+                <span asp-validation-for="RawMessage" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CreatedAt" class="control-label"></label>
+                <input asp-for="CreatedAt" class="form-control" />
+                <span asp-validation-for="CreatedAt" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="LogType" class="control-label"></label>
+                <select asp-for="LogType" class="form-control"></select>
+                <span asp-validation-for="LogType" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="DomainId" class="control-label"></label>
+                <select asp-for="DomainId" class ="form-control" asp-items="ViewBag.DomainId"></select>
+            </div>
+            <div class="form-group">
+                <label asp-for="DnsServerId" class="control-label"></label>
+                <select asp-for="DnsServerId" class ="form-control" asp-items="ViewBag.DnsServerId"></select>
+            </div>
+            <div class="form-group">
+                <label asp-for="RegistryId" class="control-label"></label>
+                <select asp-for="RegistryId" class ="form-control" asp-items="ViewBag.RegistryId"></select>
+            </div>
+            <div class="form-group">
+                <label asp-for="JobId" class="control-label"></label>
+                <select asp-for="JobId" class ="form-control" asp-items="ViewBag.JobId"></select>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

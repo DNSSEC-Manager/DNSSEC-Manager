@@ -1,0 +1,239 @@
+﻿@model Backend.ViewModels.LogsViewModel
+@using Humanizer
+
+@{
+    ViewData["Title"] = "Logs";
+}
+
+<h1>Logs</h1>
+
+<br />
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                <a class="@(Model.Sort != "CreatedAt" && Model.Sort != "CreatedAt_desc" ? "text-dark" : "")" asp-action="Index" asp-route-pageNumber="@Model.PageNumber"
+                   asp-route-sort="@(Model.Sort == "CreatedAt_desc" ? "CreatedAt" : "CreatedAt_desc")" asp-route-logType="@((int) Model.LogType)"  asp-route-dnsServerId="@Model.DnsServerId" asp-route-pageSize="@Model.PageSize">
+                    Created at
+                    @if (Model.Sort == "CreatedAt")
+                    {
+                        <i class="fa fa-angle-up"></i>
+                    }
+                    else if (Model.Sort == "CreatedAt_desc")
+                    {
+                        <i class="fa fa-angle-down"></i>
+                    }
+                </a>
+            </th>
+            <th>
+                <a class="@(Model.Sort != "Message" && Model.Sort != "Message_desc" ? "text-dark" : "")" asp-action="Index" asp-route-pageNumber="@Model.PageNumber"
+                   asp-route-sort="@(Model.Sort == "Message" ? "Message_desc" : "Message")" asp-route-logType="@Model.LogType)"  asp-route-dnsServerId="@Model.DnsServerId" asp-route-pageSize="@Model.PageSize">
+                    Message
+                    @if (Model.Sort == "Message")
+                    {
+                        <i class="fa fa-angle-up"></i>
+                    }
+                    else if (Model.Sort == "Message_desc")
+                    {
+                        <i class="fa fa-angle-down"></i>
+                    }
+                </a>
+            </th>
+            <th>
+                <div class="dropdown">
+                    <a class="@(Model.LogType == 0 ? "text-dark" : "") dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Log type
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                        <a class="nav-link text-dark" asp-action="Index" asp-route-pageNumber="1" asp-route-logType="0" asp-route-sort="@Model.Sort"  asp-route-dnsServerId="@Model.DnsServerId" asp-route-pageSize="@Model.PageSize">
+                            All
+                        </a>
+                        @foreach (var type in Enum.GetValues(typeof(LogType)))
+                        {
+                            <a class="nav-link text-dark" asp-action="Index" asp-route-pageNumber="1" asp-route-logType="@((int)type)" asp-route-sort="@Model.Sort"  asp-route-dnsServerId="@Model.DnsServerId" asp-route-pageSize="@Model.PageSize">
+                                @(type)
+                            </a>
+                        }
+
+                    </div>
+                </div>
+            </th>
+            <th>
+                <a class="@(Model.Sort != "Domain" && Model.Sort != "Domain_desc" ? "text-dark" : "")" asp-action="Index" asp-route-pageNumber="@Model.PageNumber"
+                   asp-route-sort="@(Model.Sort == "Domain" ? "Domain_desc" : "Domain")" asp-route-logType="@(Model.LogType)" asp-route-dnsServerId="@Model.DnsServerId" asp-route-pageSize="@Model.PageSize">
+                    Domain
+                    @if (Model.Sort == "Domain")
+                    {
+                        <i class="fa fa-angle-up"></i>
+                    }
+                    else if (Model.Sort == "Domain_desc")
+                    {
+                        <i class="fa fa-angle-down"></i>
+                    }
+                </a>
+            </th>
+            <th>
+                <a class="@(Model.DnsServerId == null ? "text-dark" : "") dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    DNS server
+                </a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                    <a class="nav-link text-dark" asp-action="Index" asp-route-pageNumber="@Model.PageNumber" asp-route-dnsServerId=""  asp-route-pageSize="@Model.PageSize"
+                       asp-route-sort="@Model.Sort" asp-route-logType="@(Model.LogType)">
+                        All
+                    </a>
+                    <a class="nav-link text-dark" asp-action="Index" asp-route-pageNumber="@Model.PageNumber" asp-route-dnsServerId="0"  asp-route-pageSize="@Model.PageSize"
+                       asp-route-sort="@Model.Sort" asp-route-logType="@(Model.LogType)">
+                        Any
+                    </a>
+                    <a class="nav-link text-dark" asp-action="Index" asp-route-pageNumber="@Model.PageNumber" asp-route-dnsServerId="-1"  asp-route-pageSize="@Model.PageSize"
+                       asp-route-sort="@Model.Sort" asp-route-logType="@(Model.LogType)">
+                        None
+                    </a>
+                    @foreach (var dnsServer in Model.DnsServers)
+                    {
+                        <a class="nav-link text-dark" asp-action="Index" asp-route-pageNumber="@Model.PageNumber" asp-route-dnsServerId="@dnsServer.Id"  asp-route-pageSize="@Model.PageSize"
+                           asp-route-sort="@Model.Sort" asp-route-logType="@(Model.LogType)">
+                            @dnsServer.Name
+                        </a>
+                    }
+
+                </div>
+            </th>
+            <th>
+                Job
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.Logs)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.CreatedAt)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Message)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.LogType)
+                </td>
+                <td>
+                    @if (item.DomainId != null && item.Domain != null)
+                    {
+                    <a href="~/Domains/Details/@item.DomainId">@Html.DisplayFor(modelItem => item.Domain.Name)</a>    
+                    }
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.DnsServer.Name)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Job.Task)
+                </td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@item.Id">Details</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@{
+    var toLeft = 3;
+    var toRight = 3;
+
+}
+<div class="paginationCustom">
+    <div>
+        <a class="btn btn-default" asp-action="Index" asp-route-pageNumber="1"
+           asp-route-sort="@Model.Sort" asp-route-logType="@(Model.LogType)" asp-route-dnsServerId="@Model.DnsServerId" asp-route-pageSize="@Model.PageSize">
+            <i class="fa fa-angle-left"></i><i class="fa fa-angle-left"></i> 1
+        </a>
+        <a class="btn btn-default @(Model.PageNumber - 100 <= 100 ? " disabled" : "")" asp-action="Index" asp-route-pageNumber="@(Model.PageNumber - 100)"
+           asp-route-sort="@Model.Sort" asp-route-logType="@(Model.LogType)" asp-route-dnsServerId="@Model.DnsServerId" asp-route-pageSize="@Model.PageSize">
+            <i class="fa fa-angle-left"></i> -100
+        </a>
+        <a class="btn btn-default @(Model.PageNumber - 10 <= 0 ? " disabled" : "")" asp-action="Index" asp-route-pageNumber="@(Model.PageNumber - 10)"
+           asp-route-sort="@Model.Sort" asp-route-logType="@(Model.LogType)" asp-route-dnsServerId="@Model.DnsServerId" asp-route-pageSize="@Model.PageSize">
+            <i class="fa fa-angle-left"></i> -10
+        </a>
+        <a class="btn btn-default @(!Model.HasPreviousPage ? "disabled" : "")" asp-action="Index" asp-route-pageNumber="@(Model.PageNumber - 1)"
+           asp-route-sort="@Model.Sort" asp-route-logType="@(Model.LogType)" asp-route-dnsServerId="@Model.DnsServerId" asp-route-pageSize="@Model.PageSize">
+            <i class="fa fa-angle-left"></i> Previous
+        </a>
+    </div>
+    
+    <div>
+        @for (var i = toLeft; i > 0; i--)
+        {
+            if (Model.PageNumber - i > 0)
+            {
+                <a class="btn btn-default" asp-action="Index" asp-route-pageNumber="@(Model.PageNumber - i)"
+                   asp-route-sort="@Model.Sort" asp-route-logType="@(Model.LogType)" asp-route-dnsServerId="@Model.DnsServerId" asp-route-pageSize="@Model.PageSize">
+                    @(Model.PageNumber - i)
+                </a>
+            }
+
+        }
+        <div style="padding: 0.375rem 0.75rem; display:inline-block">
+            @(Model.PageNumber)
+        </div>
+
+
+        @for (var i = 1; i < toRight + 1; i++)
+        {
+            if (Model.PageNumber + i <= Model.TotalPages)
+            {
+                <a class="btn btn-default" asp-action="Index" asp-route-pageNumber="@(Model.PageNumber + i)"
+                   asp-route-sort="@Model.Sort" asp-route-logType="@(Model.LogType)" asp-route-dnsServerId="@Model.DnsServerId" asp-route-pageSize="@Model.PageSize">
+                    @(Model.PageNumber + i)
+                </a>
+            }
+
+        }
+    </div>
+    <div>
+        <a class="btn btn-default @(!Model.HasNextPage ? "disabled" : "")" asp-action="Index" asp-route-pageNumber="@(Model.PageNumber + 1)"
+           asp-route-sort="@Model.Sort" asp-route-logType="@(Model.LogType)" asp-route-dnsServerId="@Model.DnsServerId" asp-route-pageSize="@Model.PageSize">
+            Next <i class="fa fa-angle-right"></i>
+        </a>
+
+        <a class="btn btn-default @(Model.PageNumber + 10 > Model.TotalPages ? " disabled" : "")" asp-action="Index" asp-route-pageNumber="@(Model.PageNumber + 10)"
+           asp-route-sort="@Model.Sort" asp-route-logType="@(Model.LogType)" asp-route-dnsServerId="@Model.DnsServerId" asp-route-pageSize="@Model.PageSize">
+            +10 <i class="fa fa-angle-right"></i>
+        </a>
+
+        <a class="btn btn-default @(Model.PageNumber + 100 > Model.TotalPages ? " disabled" : "")" asp-action="Index" asp-route-pageNumber="@(Model.PageNumber + 100)"
+           asp-route-sort="@Model.Sort" asp-route-logType="@(Model.LogType)" asp-route-dnsServerId="@Model.DnsServerId" asp-route-pageSize="@Model.PageSize">
+            +100 <i class="fa fa-angle-right"></i>
+        </a>
+
+        <a class="btn btn-default" asp-action="Index" asp-route-pageNumber="@Model.TotalPages"
+           asp-route-sort="@Model.Sort" asp-route-logType="@(Model.LogType)" asp-route-dnsServerId="@Model.DnsServerId" asp-route-pageSize="@Model.PageSize">
+            @Model.TotalPages <i class="fa fa-angle-right"></i><i class="fa fa-angle-right"></i>
+        </a>
+    </div>
+    
+</div>
+<div class="paginationCustom paginationCustom--center">
+    <div class="dropdown">
+        <button class="btn bg-white dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            @Model.PageSize
+        </button>
+        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+            <a asp-action="Index" asp-route-pageNumber="1" asp-route-pageSize="10"
+               asp-route-sort="@Model.Sort" asp-route-logType="@(Model.LogType)" asp-route-dnsServerId="@Model.DnsServerId" class="dropdown-item">10</a>
+            <a asp-action="Index" asp-route-pageNumber="1" asp-route-pageSize="25"
+               asp-route-sort="@Model.Sort" asp-route-logType="@(Model.LogType)" asp-route-dnsServerId="@Model.DnsServerId" class="dropdown-item">25</a>
+            <a asp-action="Index" asp-route-pageNumber="1" asp-route-pageSize="50"
+               asp-route-sort="@Model.Sort" asp-route-logType="@(Model.LogType)" asp-route-dnsServerId="@Model.DnsServerId" class="dropdown-item">50</a>
+            <a asp-action="Index" asp-route-pageNumber="1" asp-route-pageSize="100"
+               asp-route-sort="@Model.Sort" asp-route-logType="@(Model.LogType)" asp-route-dnsServerId="@Model.DnsServerId" class="dropdown-item">100</a>
+            <a asp-action="Index" asp-route-pageNumber="1" asp-route-pageSize="1000"
+               asp-route-sort="@Model.Sort" asp-route-logType="@(Model.LogType)" asp-route-dnsServerId="@Model.DnsServerId" class="dropdown-item">1000</a>
+        </div>
+    </div>
+</div>
+
+

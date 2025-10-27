@@ -364,3 +364,10 @@ FodyWeavers.xsd
 
 # Dataprotection Keys
 Backend/Keys/*.xml
+
+# Jetbrains Rider
+.idea/
+*.iml
+
+# Visual Studio Code
+.vscode/
