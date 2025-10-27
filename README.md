@@ -4,19 +4,16 @@ DNSSEC Manager for PowerDNS
 
 ## Installation
 
-1. Clone this git repository to Visual Studio
+1. Clone this git repository to your IDE of choice
 2. Publish the project to your server with .NET core support
-3. Create a new MSSQL database with username and password
-4. Edit the DefaultConnection to match your MSSQL database in the file appsettings.Production.json
-5. Browse to web application and apply database migrations
-6. Hit refresh and you should see the login screen of the application
+4. Browse to web application
 
 ## Prepare PowerDNS
 
 To use this software you need a PowerDNS Authoritative Nameserver: https://doc.powerdns.com/authoritative/
 
 Configure API access in /etc/pdns/pdns.conf and open your firewall\
-Configuring SSL for PowerDNS api: https://dnssec-script.com/configuring-ssl-for-powerdns-api/
+Configuring SSL for PowerDNS api: https://www.paulhermans.eu/configuring-ssl-for-powerdns-api/
 
 ## First time configuration
 
@@ -40,7 +37,7 @@ Configure a Task Scheduler or Cronjob to run the Scheduler every hour: yourappho
 Default login:\
 Username: admin\
 Password: ChangeMe123!\
-Email: contact@dnssec-script.com
+Email: example@dnssecmanager.net
 
 ## Credits
 
