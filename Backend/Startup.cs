@@ -15,6 +15,8 @@ using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
 using Backend.Data;
 using Backend.Business;
 using Backend.Scheduler;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 
 namespace Backend
 {
@@ -33,11 +35,16 @@ namespace Backend
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            // Ensure persistence folders exist (mounted as volumes in Docker)
             var keysFolder = Path.Combine(_environment.ContentRootPath, "Keys");
+            Directory.CreateDirectory(keysFolder);
+            var dataFolder = Path.Combine(_environment.ContentRootPath, "data");
+            Directory.CreateDirectory(dataFolder);
+
             services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(keysFolder));
 
             services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(
+                options.UseSqlite(
                     Configuration.GetConnectionString("DefaultConnection")));
             services.AddDatabaseDeveloperPageExceptionFilter();
             services.AddDefaultIdentity<IdentityUser>()
@@ -79,7 +86,10 @@ namespace Backend
             app.UseDeveloperExceptionPage();
             app.UseMigrationsEndPoint();
 
-            app.UseHttpsRedirection();
+            if (env.IsProduction())
+            {
+                app.UseHttpsRedirection();
+            }
             app.UseStaticFiles();
 
             app.UseRouting();
@@ -94,6 +104,13 @@ namespace Backend
                     pattern: "{controller=Dashboard}/{action=Index}/{id?}");
                 endpoints.MapRazorPages();
             });
+
+            // Apply pending EF Core migrations at startup (works for SQLite)
+            using (var scope = app.ApplicationServices.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                db.Database.Migrate();
+            }
         }
     }
 }

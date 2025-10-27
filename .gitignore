@@ -365,6 +365,9 @@ FodyWeavers.xsd
 # Dataprotection Keys
 Backend/Keys/*.xml
 
+# SQLite database
+Backend/Data/app.db*
+
 # Jetbrains Rider
 .idea/
 *.iml
