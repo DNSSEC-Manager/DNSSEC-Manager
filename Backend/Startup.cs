@@ -36,12 +36,12 @@ namespace Backend
         public void ConfigureServices(IServiceCollection services)
         {
             // Ensure persistence folders exist (mounted as volumes in Docker)
-            var keysFolder = Path.Combine(_environment.ContentRootPath, "Keys");
-            Directory.CreateDirectory(keysFolder);
+            //var keysFolder = Path.Combine(_environment.ContentRootPath, "keys");
+            //Directory.CreateDirectory(keysFolder);
             var dataFolder = Path.Combine(_environment.ContentRootPath, "data");
             Directory.CreateDirectory(dataFolder);
 
-            services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(keysFolder));
+            services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(dataFolder));
 
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlite(
