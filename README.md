@@ -2,6 +2,23 @@
 
 DNSSEC Manager for PowerDNS
 
+## Run Docker Container
+
+1. Clone this git repository
+2. Open Terminal and cd into DNSSEC-Manager
+3. docker compose up -d
+4. Browse naar http://localhost:8081/ (PowerDNS statistics page)
+5. Browse naar http://localhost:5000/ (DNSSEC Manager)
+
+- docker compose logs -f
+- docker compose exec db mariadb -u pdns -ppdnspassword pdns -e "SHOW TABLES;"
+- docker compose exec db mariadb -u pdns -ppdnspassword pdns -e "SELECT id, name, type FROM domains;"
+- docker compose logs db
+- docker compose logs pdns
+- docker compose exec pdns pdns_control current-config diff
+- curl -H "X-API-Key: supersecretapikey" http://localhost:8081/api/v1/servers
+- Invoke-RestMethod -Headers @{ "X-API-Key" = "supersecretapikey" } -Uri http://localhost:8081/api/v1/servers/localhost/zones
+
 ## Installation
 
 1. Clone this git repository to your IDE of choice

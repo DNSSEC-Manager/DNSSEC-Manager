@@ -1,0 +1,63 @@
+﻿services:
+  backend:
+    image: dnssecmanager
+    build:
+      context: .
+      dockerfile: Backend/Dockerfile
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5000
+      - PDNS_API_URL=http://pdns:8081
+      - PDNS_API_KEY=supersecretapikey
+    volumes:
+      - app-data:/app/data
+      - app-keys:/app/keys
+    depends_on:
+      - pdns
+        
+  pdns:
+    #image: powerdns/pdns-auth-50:latest
+    image: pschiffe/pdns-mysql:4.8
+    container_name: pdns
+    restart: unless-stopped
+    environment:
+      PDNS_launch: gmysql
+      PDNS_gmysql_host: db
+      PDNS_gmysql_user: pdns
+      PDNS_gmysql_password: pdnspassword
+      PDNS_gmysql_dbname: pdns
+      PDNS_gmysql_dnssec: yes
+      PDNS_api: yes
+      PDNS_api_key: supersecretapikey
+      PDNS_webserver: yes
+      PDNS_webserver_address: 0.0.0.0
+      PDNS_webserver_port: 8081
+      PDNS_webserver_allow_from: 0.0.0.0/0
+      PDNS_allow_axfr_ips: 0.0.0.0/0
+    ports:
+      - "8081:8081"
+      - "53:53/tcp"
+      - "53:53/udp"
+    depends_on:
+      - db
+
+  db:
+    image: mariadb:11.8
+    container_name: pdns-db
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpassword
+      - MYSQL_DATABASE=pdns
+      - MYSQL_USER=pdns
+      - MYSQL_PASSWORD=pdnspassword
+    volumes:
+      - pdns-data:/var/lib/mysql
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+
+volumes:
+  pdns-data:
+  app-data:
+  app-keys:

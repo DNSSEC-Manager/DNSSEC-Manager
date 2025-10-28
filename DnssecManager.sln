@@ -15,6 +15,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.gitignore = .gitignore
 		LICENSE = LICENSE
 		README.md = README.md
+		compose.yaml = compose.yaml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "pdns-init", "pdns-init", "{63E5CEBA-88F8-4449-A314-694A26C8F9CC}"
+	ProjectSection(SolutionItems) = preProject
+		schema.sql = schema.sql
 	EndProjectSection
 EndProject
 Global
@@ -41,5 +47,8 @@ Global
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {FEB43525-B3BB-4D5F-B453-AFEFA976699F}
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{63E5CEBA-88F8-4449-A314-694A26C8F9CC} = {741CED37-7D29-4762-A836-2C9FA072431B}
 	EndGlobalSection
 EndGlobal
