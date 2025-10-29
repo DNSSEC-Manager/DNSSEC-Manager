@@ -416,7 +416,7 @@ namespace Providers
 
         private string CreateWebRequestAsync(string url, string method = "GET", string toPost = "")
         {
-            var request = new RestRequest("url");
+            var request = new RestRequest(url);
             switch (method)
             {
                 case "PATCH":

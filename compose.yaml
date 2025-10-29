@@ -36,10 +36,11 @@
       PDNS_webserver_port: 8081
       PDNS_webserver_allow_from: 0.0.0.0/0
       PDNS_allow_axfr_ips: 0.0.0.0/0
+      PDNS_loglevel: 9
     ports:
       - "8081:8081"
-      - "53:53/tcp"
-      - "53:53/udp"
+      - "5300:53/tcp"
+      - "5300:53/udp"
     depends_on:
       - db
 

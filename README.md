@@ -7,8 +7,8 @@ DNSSEC Manager for PowerDNS
 1. Clone this git repository
 2. Open Terminal and cd into DNSSEC-Manager
 3. docker compose up -d
-4. Browse naar http://localhost:8081/ (PowerDNS statistics page)
-5. Browse naar http://localhost:5000/ (DNSSEC Manager)
+4. Browse to http://localhost:8081/ (PowerDNS statistics page)
+5. Browse to http://localhost:5000/ (DNSSEC Manager)
 
 - docker compose logs -f
 - docker compose exec db mariadb -u pdns -ppdnspassword pdns -e "SHOW TABLES;"

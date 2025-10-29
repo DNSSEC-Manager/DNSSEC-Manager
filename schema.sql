@@ -121,7 +121,7 @@ VALUES
 (@domain1_id, 'www.example.com', 'A', '192.0.2.2', 3600, NULL),
 (@domain1_id, 'www.example.com', 'AAAA', '2001:db8::2', 3600, NULL),
 (@domain1_id, 'mail.example.com', 'A', '192.0.2.10', 3600, NULL),
-(@domain1_id, 'mail.example.com', 'MX', '10 mail.example.com', 3600, 10),
+(@domain1_id, 'mail.example.com', 'MX', 'mail.example.com', 3600, 10),
 (@domain1_id, 'ftp.example.com', 'CNAME', 'www.example.com', 3600, NULL),
 (@domain1_id, 'example.com', 'TXT', '"v=spf1 include:_spf.example.com ~all"', 3600, NULL);
 
@@ -136,7 +136,7 @@ VALUES
 (@domain2_id, 'www.testsite.net', 'A', '198.51.100.11', 3600, NULL),
 (@domain2_id, 'www.testsite.net', 'AAAA', '2001:db8:1::11', 3600, NULL),
 (@domain2_id, 'mail.testsite.net', 'A', '198.51.100.12', 3600, NULL),
-(@domain2_id, 'mail.testsite.net', 'MX', '10 mail.testsite.net', 3600, 10),
+(@domain2_id, 'mail.testsite.net', 'MX', 'mail.testsite.net', 3600, 10),
 (@domain2_id, 'blog.testsite.net', 'CNAME', 'www.testsite.net', 3600, NULL),
 (@domain2_id, 'testsite.net', 'TXT', '"v=spf1 include:_spf.testsite.net ~all"', 3600, NULL);
 
@@ -151,7 +151,7 @@ VALUES
 (@domain3_id, 'www.mydomain.org', 'A', '203.0.113.6', 3600, NULL),
 (@domain3_id, 'www.mydomain.org', 'AAAA', '2001:db8:2::6', 3600, NULL),
 (@domain3_id, 'mail.mydomain.org', 'A', '203.0.113.7', 3600, NULL),
-(@domain3_id, 'mail.mydomain.org', 'MX', '10 mail.mydomain.org', 3600, 10),
+(@domain3_id, 'mail.mydomain.org', 'MX', 'mail.mydomain.org', 3600, 10),
 (@domain3_id, 'shop.mydomain.org', 'CNAME', 'www.mydomain.org', 3600, NULL),
 (@domain3_id, 'mydomain.org', 'TXT', '"v=spf1 include:_spf.mydomain.org ~all"', 3600, NULL);
 
@@ -165,7 +165,7 @@ VALUES
 (@domain4_id, 'demo.local', 'AAAA', 'fd00::1', 3600, NULL),
 (@domain4_id, 'www.demo.local', 'A', '10.0.0.2', 3600, NULL),
 (@domain4_id, 'www.demo.local', 'AAAA', 'fd00::2', 3600, NULL),
-(@domain4_id, 'mail.demo.local', 'MX', '10 mail.demo.local', 3600, 10),
+(@domain4_id, 'mail.demo.local', 'MX', 'mail.demo.local', 3600, 10),
 (@domain4_id, 'ftp.demo.local', 'CNAME', 'www.demo.local', 3600, NULL),
 (@domain4_id, 'demo.local', 'TXT', '"v=spf1 include:_spf.demo.local ~all"', 3600, NULL);
 
@@ -179,6 +179,6 @@ VALUES
 (@domain5_id, 'staging.example.net', 'AAAA', 'fd01::1', 3600, NULL),
 (@domain5_id, 'www.staging.example.net', 'A', '10.1.0.2', 3600, NULL),
 (@domain5_id, 'www.staging.example.net', 'AAAA', 'fd01::2', 3600, NULL),
-(@domain5_id, 'mail.staging.example.net', 'MX', '10 mail.staging.example.net', 3600, 10),
+(@domain5_id, 'mail.staging.example.net', 'MX', 'mail.staging.example.net', 3600, 10),
 (@domain5_id, 'blog.staging.example.net', 'CNAME', 'www.staging.example.net', 3600, NULL),
 (@domain5_id, 'staging.example.net', 'TXT', '"v=spf1 include:_spf.staging.example.net ~all"', 3600, NULL);
