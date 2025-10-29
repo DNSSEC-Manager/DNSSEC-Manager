@@ -27,10 +27,10 @@ public class DnsServerService : IDnsServerService
         // Protect the AuthToken
         dnsServer.AuthToken = _utilities.Protect(dnsServer.AuthToken);
 
-        // Voeg DnsServer toe
+        // Add DnsServer
         _context.Add(dnsServer);
 
-        // Maak de Job aan
+        // Create Permanent Job
         var newJob = new Job
         {
             DnsServer = dnsServer,
@@ -82,29 +82,22 @@ public class DnsServerService : IDnsServerService
         };
         
         // Creating DNS Server
-        //Console.WriteLine("Creating DNS server...");
         var server = await CreateDnsServerAsync(dnsServer);
         Console.WriteLine($"DNS Server '{name}' added from environment variables.");
+         _context.Attach(server);
         
-        //  _context.Attach(server);
-        // Console.WriteLine($"Created DNS server with ID: {server.Id}");
-        //
-        // Adding example nameservers for this DNS Server
-        /*var nameServerGroup = new NameServerGroup
+        var nameServerGroup = new NameServerGroup
         {
-            Name = "ns1+ns2.example.com",
-            DnsServerId = server.Id,
-            DnsServer = server,
-            NameServers =
-            {
-                new NameServer { Name = "ns1.example.com" },
-                new NameServer { Name = "ns2.example.com" }
-            }
+            Name = "ns1/ns2.example.com",
+            DnsServer = server
         };
 
-        server.NameServerGroups.Add(nameServerGroup);
-        await _context.SaveChangesAsync();*/
-        
+        var ns1 = new NameServer { Name = "ns1.example.com", NameServerGroup = nameServerGroup };
+        var ns2 = new NameServer { Name = "ns2.example.com", NameServerGroup = nameServerGroup };
+        _context.NameServerGroups.Add(nameServerGroup);
+        _context.NameServers.AddRange(ns1, ns2);
+        await _context.SaveChangesAsync();
+        Console.WriteLine("Example Nameservers added");
         return server;
     }
 }
