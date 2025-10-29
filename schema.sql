@@ -116,14 +116,25 @@ SET @domain1_id = LAST_INSERT_ID();
 
 INSERT INTO records (domain_id, name, type, content, ttl, prio)
 VALUES
+(@domain1_id, 'example.com', 'SOA', 'ns1.example.com. hostmaster.example.com. 2025102901 3600 600 604800 3600', 3600, NULL),
+(@domain1_id, 'example.com', 'NS', 'ns1.example.com.', 3600, NULL),
+(@domain1_id, 'example.com', 'NS', 'ns2.example.com.', 3600, NULL),
+(@domain1_id, 'ns1.example.com', 'A', '192.0.2.53', 3600, NULL),
+(@domain1_id, 'ns1.example.com', 'AAAA', '2001:db8::53', 3600, NULL),
+(@domain1_id, 'ns2.example.com', 'A', '192.0.2.54', 3600, NULL),
+(@domain1_id, 'ns2.example.com', 'AAAA', '2001:db8::54', 3600, NULL),
 (@domain1_id, 'example.com', 'A', '192.0.2.1', 3600, NULL),
 (@domain1_id, 'example.com', 'AAAA', '2001:db8::1', 3600, NULL),
-(@domain1_id, 'www.example.com', 'A', '192.0.2.2', 3600, NULL),
-(@domain1_id, 'www.example.com', 'AAAA', '2001:db8::2', 3600, NULL),
 (@domain1_id, 'mail.example.com', 'A', '192.0.2.10', 3600, NULL),
-(@domain1_id, 'mail.example.com', 'MX', 'mail.example.com', 3600, 10),
-(@domain1_id, 'ftp.example.com', 'CNAME', 'www.example.com', 3600, NULL),
-(@domain1_id, 'example.com', 'TXT', '"v=spf1 include:_spf.example.com ~all"', 3600, NULL);
+(@domain1_id, 'example.com', 'MX', 'mail.example.com', 3600, 10),
+(@domain1_id, 'www.example.com', 'CNAME', 'example.com', 3600, NULL),
+(@domain1_id, 'ftp.example.com', 'CNAME', 'example.com', 3600, NULL),
+(@domain1_id, 'example.com', 'TXT', '"v=spf1 include:_spf.example.com ~all"', 3600, NULL),
+(@domain1_id, '_spf.example.com', 'TXT', '"v=spf1 ip4:192.0.2.10 -all"', 3600, NULL),
+(@domain1_id, '_dmarc.example.com', 'TXT', '"v=DMARC1; p=quarantine; rua=mailto:postmaster@example.com; pct=100"', 3600, NULL),
+(@domain1_id, 'default._domainkey.example.com', 'TXT',
+ '"v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtxM6tS5gG5h6/9eO5u3ncRfYyEjYdT4QFf6Jv7QzO0pS9wHkU+Lx6gZ4a1sR0wJvV9m1bQnKlK0J2X1dDJ1F+5tNQ8V4wHZk6M2YqC8YjQePN9b4cETrYV5Qv+LjfZFGY6n+vTzRok9l8xJpV6T2E8iQF1Z+S5Hp9Yw0Fe9s2q+vY3F+9kPj2u6JfVx8F/5bT5gE1Zc4j6sP8uHzrUoMtKl2GcQXoK+rAxZjx1fQJ+/+NQz+zF2O+9zVqRqK3ykpEbLvq6/2W6t5q9yc9B3El2eCqkF2M7A3Pb1jLx9n9Z6G9ZqDUp+v5S0w1Pt6qB1TzqRj3L+QIDAQAB"',
+ 3600, NULL);
 
 -- Domain 2: testsite.net
 INSERT INTO domains (name, type, account) VALUES ('testsite.net', 'MASTER', 'test');
@@ -131,6 +142,7 @@ SET @domain2_id = LAST_INSERT_ID();
 
 INSERT INTO records (domain_id, name, type, content, ttl, prio)
 VALUES
+(@domain2_id, 'testsite.net', 'SOA', 'ns1.example.com. hostmaster.example.com. 2025102901 3600 600 604800 3600', 3600, NULL),
 (@domain2_id, 'testsite.net', 'A', '198.51.100.10', 3600, NULL),
 (@domain2_id, 'testsite.net', 'AAAA', '2001:db8:1::10', 3600, NULL),
 (@domain2_id, 'www.testsite.net', 'A', '198.51.100.11', 3600, NULL),
@@ -146,6 +158,7 @@ SET @domain3_id = LAST_INSERT_ID();
 
 INSERT INTO records (domain_id, name, type, content, ttl, prio)
 VALUES
+(@domain3_id, 'mydomain.org', 'SOA', 'ns1.example.com. hostmaster.example.com. 2025102901 3600 600 604800 3600', 3600, NULL),
 (@domain3_id, 'mydomain.org', 'A', '203.0.113.5', 3600, NULL),
 (@domain3_id, 'mydomain.org', 'AAAA', '2001:db8:2::5', 3600, NULL),
 (@domain3_id, 'www.mydomain.org', 'A', '203.0.113.6', 3600, NULL),
@@ -161,6 +174,7 @@ SET @domain4_id = LAST_INSERT_ID();
 
 INSERT INTO records (domain_id, name, type, content, ttl, prio)
 VALUES
+(@domain4_id, 'demo.local', 'SOA', 'ns1.example.com. hostmaster.example.com. 2025102901 3600 600 604800 3600', 3600, NULL),
 (@domain4_id, 'demo.local', 'A', '10.0.0.1', 3600, NULL),
 (@domain4_id, 'demo.local', 'AAAA', 'fd00::1', 3600, NULL),
 (@domain4_id, 'www.demo.local', 'A', '10.0.0.2', 3600, NULL),
@@ -175,6 +189,7 @@ SET @domain5_id = LAST_INSERT_ID();
 
 INSERT INTO records (domain_id, name, type, content, ttl, prio)
 VALUES
+(@domain5_id, 'staging.example.net', 'SOA', 'ns1.example.com. hostmaster.example.com. 2025102901 3600 600 604800 3600', 3600, NULL),    
 (@domain5_id, 'staging.example.net', 'A', '10.1.0.1', 3600, NULL),
 (@domain5_id, 'staging.example.net', 'AAAA', 'fd01::1', 3600, NULL),
 (@domain5_id, 'www.staging.example.net', 'A', '10.1.0.2', 3600, NULL),
