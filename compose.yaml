@@ -10,8 +10,9 @@
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:5000
-      - PDNS_API_URL=http://pdns:8081
-      - PDNS_API_KEY=supersecretapikey
+      - DNS_SERVER_NAME=docker
+      - DNS_SERVER_API_URL=http://pdns:8081
+      - DNS_SERVER_API_KEY=supersecretapikey
     volumes:
       - app-data:/app/data
     depends_on:

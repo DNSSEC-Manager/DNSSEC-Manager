@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI;
@@ -15,6 +16,7 @@ using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
 using Backend.Data;
 using Backend.Business;
 using Backend.Scheduler;
+using Backend.Services;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 
@@ -65,6 +67,7 @@ namespace Backend
             services.AddScoped<IProviderDecider, ProviderDecider>();
             services.AddScoped<IUtilities, Utilities>();
             services.AddScoped<IGlobals, Globals>();
+            services.AddScoped<IDnsServerService, DnsServerService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -110,6 +113,10 @@ namespace Backend
             {
                 var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
                 db.Database.Migrate();
+                
+                // Create DnsServer from environment variables at startup
+                var dnsServerService = scope.ServiceProvider.GetRequiredService<IDnsServerService>();
+                dnsServerService.CreateDnsServerFromEnvironmentAsync();
             }
         }
     }

@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Backend.Data;
 using Backend.Models;
+using Backend.Services;
 using Microsoft.AspNetCore.DataProtection;
 using Providers;
 using Backend.ViewModels;
@@ -20,12 +21,14 @@ namespace Backend.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IUtilities _utilities;
         private readonly IProviderDecider _providerDecider;
+        private readonly IDnsServerService _dnsServerService;
 
-        public DnsServersController(ApplicationDbContext context, IUtilities utilities, IProviderDecider providerDecider)
+        public DnsServersController(ApplicationDbContext context, IUtilities utilities, IProviderDecider providerDecider, IDnsServerService dnsServerService)
         {
             _context = context;
             _utilities = utilities;
             _providerDecider = providerDecider;
+            _dnsServerService = dnsServerService;
         }
 
         [HttpPost]
@@ -94,30 +97,13 @@ namespace Backend.Controllers
         }
 
         // POST: DnsServers/Create
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
-        // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Name,BaseUrl,ServerType,AuthToken")] DnsServer dnsServer)
         {
             if (ModelState.IsValid)
             {
-                dnsServer.AuthToken = _utilities.Protect(dnsServer.AuthToken);
-                _context.Add(dnsServer);
-
-                var newJob = new Job
-                {
-                    DnsServer = dnsServer,
-                    DnsServerId = dnsServer.Id,
-                    IsPermanent = true,
-                    CreatedAt = DateTime.Now,
-                    Task = JobName.CheckForDomainChanges,
-                    UpdatedAt = DateTime.Now,
-                    RunAfter = DateTime.Now
-                };
-                _context.Add(newJob);
-
-                await _context.SaveChangesAsync();
+                await _dnsServerService.CreateDnsServerAsync(dnsServer);
                 return RedirectToAction(nameof(Index));
             }
             return View(dnsServer);
