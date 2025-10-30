@@ -1,67 +1,118 @@
+# DNSSEC Manager for PowerDNS
+
+**DNSSEC Manager** is a tool for DNS administrators that connects your PowerDNS nameservers with your domain registrars. It automates the signing of DNS zones with DNSSEC and uploads the signing keys to the domain registrars.
+
+---
+
+## Quick Start (Docker)
+
+Get the DNSSEC Manager running in just a few steps:
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/yourusername/DNSSEC-Manager.git
+cd DNSSEC-Manager
+
+# 2. Start the Docker containers
+docker compose up -d
+
+# 3. Open the web interfaces
+# PowerDNS statistics
+http://localhost:8081/
 # DNSSEC Manager
+http://localhost:5000/
+```
 
-DNSSEC Manager for PowerDNS
+**Default login:**
+- Username: `admin`
+- Password: `ChangeMe123!`
 
-## Run Docker Container
+---
 
-1. Clone this git repository
-2. Open Terminal and cd into DNSSEC-Manager
-3. docker compose up -d
-4. Browse to http://localhost:8081/ (PowerDNS statistics page)
-5. Browse to http://localhost:5000/ (DNSSEC Manager)
+## What Docker Compose Spins Up 🐳
 
-- docker compose logs -f
-- docker compose exec db mariadb -u pdns -ppdnspassword pdns -e "SHOW TABLES;"
-- docker compose exec db mariadb -u pdns -ppdnspassword pdns -e "SELECT id, name, type FROM domains;"
-- docker compose logs db
-- docker compose logs pdns
-- docker compose exec pdns pdns_control current-config diff
-- curl -H "X-API-Key: supersecretapikey" http://localhost:8081/api/v1/servers
-- Invoke-RestMethod -Headers @{ "X-API-Key" = "supersecretapikey" } -Uri http://localhost:8081/api/v1/servers/localhost/zones
+When you run `docker compose up -d`, three containers are started automatically:
 
-## Installation
+| Container | Purpose                                     | Emoji |
+|-----------|---------------------------------------------|-------|
+| `backend` | The **DNSSEC Manager** web application      | 🖥️   |
+| `pdns`    | **PowerDNS Authoritative Nameserver**       | 🌐   |
+| `db`      | **MariaDB for PowerDNS database storage** | 💾  |
 
-1. Clone this git repository to your IDE of choice
-2. Publish the project to your server with .NET core support
-4. Browse to web application
+This setup ensures your DNSSEC Manager can communicate with PowerDNS and store data automatically, without any extra configuration.
+
+---
+
+## How it works
+
+The application connects to your **PowerDNS Authoritative Nameserver** via its API and to your **domain registrars** via their API. It checks whether a domain can be signed with DNSSEC to provide enhanced security, and handles the signing and key uploads automatically.
+
+---
+
+## Installation on a server
+
+1. Clone the repository to your IDE or server.
+2. Publish the project with **.NET** support.
+3. Create folder /storage and make writeable
+4. Browse to the web application URL to start using it.
+
+---
 
 ## Prepare PowerDNS
 
-To use this software you need a PowerDNS Authoritative Nameserver: https://doc.powerdns.com/authoritative/
+To use this software, you need a **PowerDNS Authoritative Nameserver**: [PowerDNS Authoritative Guide](https://doc.powerdns.com/authoritative/)
 
-Configure API access in /etc/pdns/pdns.conf and open your firewall\
-Configuring SSL for PowerDNS api: https://www.paulhermans.eu/configuring-ssl-for-powerdns-api/
+- Configure API access in `/etc/pdns/pdns.conf`
+- Ensure your firewall allows access
+- For SSL configuration: [Configuring SSL for PowerDNS API](https://www.paulhermans.eu/configuring-ssl-for-powerdns-api/)
 
-## First time configuration
+---
 
-1. Login to application (see default login below)
-2. Click on "Hello admin!" and change the password and setup Two-factor authentication
-3. Configure application:\
-	a. Add DNS server (connect to PowerDNS API)\
-	b. Add your nameserver-group(s) corresponding with your DNS server\
-	c. Add your domain registries (connect to registry API)\
-	d. Add TLD's corresponding with your registry (if needed)\
-4. Run the scheduler for the first time yourapphostname.tld/Scheduler
+## First-time setup
 
-NOTE: if you cannot connect to your Registry you might need to whitelist the webserver to access the API
+1. Log in to the application (see default login above).
+2. Click **"Hello admin!"** to change the password and enable **Two-Factor Authentication**.
+3. Configure the application:
+    - Add your **DNS server** (connect to PowerDNS API)
+    - Add **Nameserver Groups** corresponding to your DNS server
+    - Add your **Domain Registries** (connect to registry API)
+    - Add **TLDs** corresponding with your registry (if needed)
+4. Run the scheduler for the first time:
+   ```
+   yourapphostname.tld/Scheduler
+   ```
 
-## Configure Task Scheduler or Cronjob
+> **Note:** If you cannot connect to your registry, you may need to whitelist your web server to access the API.
 
-Configure a Task Scheduler or Cronjob to run the Scheduler every hour: yourapphostname.tld/Scheduler
+---
+
+## Scheduler / Cronjob
+
+Configure a **Task Scheduler** (Windows) or **Cronjob** (Linux) to run the scheduler every hour:
+
+```
+yourapphostname.tld/Scheduler
+```
+
+---
 
 ## Default login
 
-Default login:\
-Username: admin\
-Password: ChangeMe123!\
-Email: example@dnssecmanager.net
+- **Username:** admin
+- **Password:** ChangeMe123!
+- **Email:** example@dnssecmanager.net
+
+> Change the default credentials immediately after first login.
+
+---
 
 ## Credits
 
-Written by:
 - Paul Hermans
 - Dylan Bos (Internship 2019)
 
+---
+
 ## License
 
-This project is released under the MIT license. For additional information, [see the full license](LICENSE).
+This project is released under the **MIT License**. For details, see the [LICENSE](LICENSE) file.
