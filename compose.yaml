@@ -9,12 +9,12 @@
     restart: unless-stopped
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://+:5000
+      - HTTP_PORTS=5000
       - DNS_SERVER_NAME=docker
       - DNS_SERVER_API_URL=http://pdns:8081
       - DNS_SERVER_API_KEY=supersecretapikey
     volumes:
-      - app-data:/app/data
+      - app-data:/app/storage
     depends_on:
       - pdns
         

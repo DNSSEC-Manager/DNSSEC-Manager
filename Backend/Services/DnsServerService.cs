@@ -59,7 +59,7 @@ public class DnsServerService : IDnsServerService
             string.IsNullOrWhiteSpace(baseUrl) || 
             string.IsNullOrWhiteSpace(authToken))
         {
-            Console.WriteLine("DNS environment variables not fully configured — skipping creation.");
+            //Console.WriteLine("DNS environment variables not fully configured — skipping creation.");
             return null;
         }
 
@@ -69,7 +69,7 @@ public class DnsServerService : IDnsServerService
 
         if (existingServer != null)
         {
-            Console.WriteLine($"DnsServer '{name}' already exists — skipping creation.");
+            //Console.WriteLine($"DnsServer '{name}' already exists — skipping creation.");
             return existingServer;
         }
         

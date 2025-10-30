@@ -362,11 +362,8 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 
-# Dataprotection Keys
-Backend/Keys/*.xml
-
-# SQLite database
-Backend/Data/app.db*
+# Runtime data storage SQLite database and Dataprotection keys
+Backend/storage/
 
 # Jetbrains Rider
 .idea/

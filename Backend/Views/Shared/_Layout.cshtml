@@ -1,7 +1,7 @@
 ﻿@using System;
 @using System.IO;
 @{
-    var version = typeof(Startup).Assembly.GetName().Version;
+    var version = typeof(Program).Assembly.GetName().Version;
     var semver = version.Major.ToString() + "." + version.Minor.ToString() + "." + version.Build.ToString();
     //var productname1 = typeof(Startup).Assembly.GetName().Name;
     var productname = "DNSSEC Manager";

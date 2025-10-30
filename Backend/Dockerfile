@@ -18,18 +18,15 @@ FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
 WORKDIR /app
 
 # Create persistence folders (can also be mounted as volumes)
-RUN mkdir -p /app/data && mkdir -p /app/Keys
+RUN mkdir -p /app/data
 
-ENV ASPNETCORE_URLS=http://+:5000
-ENV ASPNETCORE_ENVIRONMENT=Production
+#ENV ASPNETCORE_URLS=http://+:5000
+#ENV ASPNETCORE_ENVIRONMENT=Production
 
 # Copy published app
 COPY --from=build /app/publish .
 
 # Expose port
 EXPOSE 5000
-
-# Default connection string can be overridden via env var or docker-compose
-# ENV ConnectionStrings__DefaultConnection="Data Source=data/app.db"
 
 ENTRYPOINT ["dotnet", "Backend.dll"]
