@@ -2,8 +2,6 @@
 
 **DNSSEC Manager** is a tool for DNS administrators that connects your PowerDNS nameservers with your domain registrars. It automates the signing of DNS zones with DNSSEC and uploads the signing keys to the domain registrars.
 
----
-
 ## Quick Start (Docker)
 
 Get the DNSSEC Manager running in just a few steps:
@@ -27,8 +25,6 @@ http://localhost:5000/
 - Username: `admin`
 - Password: `ChangeMe123!`
 
----
-
 ## What Docker Compose Spins Up 🐳
 
 When you run `docker compose up -d`, three containers are started automatically:
@@ -41,13 +37,9 @@ When you run `docker compose up -d`, three containers are started automatically:
 
 This setup ensures your DNSSEC Manager can communicate with PowerDNS and store data automatically, without any extra configuration.
 
----
-
 ## How it works
 
 The application connects to your **PowerDNS Authoritative Nameserver** via its API and to your **domain registrars** via their API. It checks whether a domain can be signed with DNSSEC to provide enhanced security, and handles the signing and key uploads automatically.
-
----
 
 ## Installation on a server
 
@@ -56,8 +48,6 @@ The application connects to your **PowerDNS Authoritative Nameserver** via its A
 3. Create folder /storage and make writeable
 4. Browse to the web application URL to start using it.
 
----
-
 ## Prepare PowerDNS
 
 To use this software, you need a **PowerDNS Authoritative Nameserver**: [PowerDNS Authoritative Guide](https://doc.powerdns.com/authoritative/)
@@ -65,8 +55,6 @@ To use this software, you need a **PowerDNS Authoritative Nameserver**: [PowerDN
 - Configure API access in `/etc/pdns/pdns.conf`
 - Ensure your firewall allows access
 - For SSL configuration: [Configuring SSL for PowerDNS API](https://www.paulhermans.eu/configuring-ssl-for-powerdns-api/)
-
----
 
 ## First-time setup
 
@@ -84,8 +72,6 @@ To use this software, you need a **PowerDNS Authoritative Nameserver**: [PowerDN
 
 > **Note:** If you cannot connect to your registry, you may need to whitelist your web server to access the API.
 
----
-
 ## Scheduler / Cronjob
 
 Configure a **Task Scheduler** (Windows) or **Cronjob** (Linux) to run the scheduler every hour:
@@ -93,8 +79,6 @@ Configure a **Task Scheduler** (Windows) or **Cronjob** (Linux) to run the sched
 ```
 yourapphostname.tld/Scheduler
 ```
-
----
 
 ## Default login
 
@@ -104,14 +88,10 @@ yourapphostname.tld/Scheduler
 
 > Change the default credentials immediately after first login.
 
----
-
 ## Credits
 
 - Paul Hermans
 - Dylan Bos (Internship 2019)
-
----
 
 ## License
 
