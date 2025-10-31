@@ -7,9 +7,10 @@
     <Product>DNSSEC Manager</Product>
     <Authors>Paul Hermans, Dylan Bos</Authors>
     <PackageProjectUrl></PackageProjectUrl>
-    <Version>2.0.0</Version>
+    <Version>3.0.0</Version>
     <PackageId>DNSSEC Manager</PackageId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <Title>DNSSEC Manager for PowerDNS</Title>
   </PropertyGroup>
 
   <ItemGroup>

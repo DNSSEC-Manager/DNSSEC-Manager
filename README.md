@@ -21,9 +21,13 @@ http://localhost:8081/
 http://localhost:5000/
 ```
 
-**Default login:**
-- Username: `admin`
-- Password: `ChangeMe123!`
+## Default login
+
+- **Username:** admin
+- **Password:** ChangeMe123!
+- **Email:** example@dnssecmanager.net
+
+> Change the default credentials immediately after first login.
 
 ## What Docker Compose Spins Up 🐳
 
@@ -65,28 +69,8 @@ To use this software, you need a **PowerDNS Authoritative Nameserver**: [PowerDN
     - Add **Nameserver Groups** corresponding to your DNS server
     - Add your **Domain Registries** (connect to registry API)
     - Add **TLDs** corresponding with your registry (if needed)
-4. Run the scheduler for the first time:
-   ```
-   yourapphostname.tld/Scheduler
-   ```
 
 > **Note:** If you cannot connect to your registry, you may need to whitelist your web server to access the API.
-
-## Scheduler / Cronjob
-
-Configure a **Task Scheduler** (Windows) or **Cronjob** (Linux) to run the scheduler every hour:
-
-```
-yourapphostname.tld/Scheduler
-```
-
-## Default login
-
-- **Username:** admin
-- **Password:** ChangeMe123!
-- **Email:** example@dnssecmanager.net
-
-> Change the default credentials immediately after first login.
 
 ## Credits
 

@@ -16,14 +16,15 @@ namespace Backend.Scheduler
         private readonly ApplicationDbContext _context;
         private readonly IUtilities _utilities;
         private readonly IGlobals _globals;
+        private readonly Microsoft.Extensions.Logging.ILogger<KeyRolloverDomain> _logger;
 
         private readonly Job _job;        
-        private readonly Domain _domain;
-        private readonly IDnsProvider _dnsProvider;
-        private readonly IRegistryProvider _registryProvider;
-        private readonly Cryptokey _keyNotToDel;
+        private Domain _domain;
+        private IDnsProvider _dnsProvider;
+        private IRegistryProvider _registryProvider;
+        private Cryptokey _keyNotToDel;
 
-        public KeyRolloverDomain(ApplicationDbContext context, IUtilities utilities, IGlobals globals, Job job, List<IRegistryProvider> registryProviders, List<Registry> registries)
+        public KeyRolloverDomain(ApplicationDbContext context, IUtilities utilities, IGlobals globals, Job job, List<IRegistryProvider> registryProviders, List<Registry> registries, Microsoft.Extensions.Logging.ILogger<KeyRolloverDomain> logger = null)
         {
             _context = context;
             _job = job;
@@ -31,32 +32,41 @@ namespace Backend.Scheduler
             _globals = globals;
             _globals.Registries = registries;
             _globals.RegistryProviders = registryProviders;
+            _logger = logger;
+        }
 
-            //_globals.Utilities = _utilities;
-            //_globals = new Globals
-            //{
-            //    Utilities = new Utilities(_context),
-            //    Context = _context,
-            //    Registries = registries,
-            //    RegistryProviders = registryProviders
-            //};
-
+        public async System.Threading.Tasks.Task ExecuteAsync(System.Threading.CancellationToken ct = default)
+        {
             _keyNotToDel = _job.Cryptokey;
 
-            _domain = _context.Domains.Include(b => b.DnsServer).Single(x => x.Id == _job.DomainId);
+            _domain = _context.Domains.Include(b => b.DnsServer).SingleOrDefault(x => x.Id == _job.DomainId);
+            if (_domain == null)
+            {
+                _context.Logs.Add(Logging.LogJob(_job, LogType.Error, "No domain found with ID " + _job.DomainId));
+                _job.IsCompleted = true;
+                _job.IsSuccessful = false;
+                _job.UpdatedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync(ct);
+                return;
+            }
 
             _dnsProvider = _globals.GetDnsProvider(_domain);
             if (_dnsProvider == null)
             {
                 _context.Logs.Add(Logging.LogJob(_job, LogType.Error, "DNS server could not be found"));
+                _job.IsCompleted = true;
+                _job.IsSuccessful = false;
+                _job.UpdatedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync(ct);
                 return;
             }
 
-            _registryProvider = _globals.GetRegistryProvider(registries, registryProviders, _domain);
+            _registryProvider = _globals.GetRegistryProvider(_globals.Registries, _globals.RegistryProviders, _domain);
             if (_registryProvider == null)
             {
                 _utilities.JobFailNoRerun(_job);
                 _context.Logs.Add(Logging.LogJob(_job, LogType.Error, "Registry could not be found"));
+                await _context.SaveChangesAsync(ct);
                 return;
             }
 
@@ -66,6 +76,7 @@ namespace Backend.Scheduler
             if (!init)
             {
                 // Fails to init job, job will stop here
+                await _context.SaveChangesAsync(ct);
                 return;
             }
 
@@ -85,9 +96,8 @@ namespace Backend.Scheduler
                     break;
             }
 
-            _job.UpdatedAt = DateTime.Now;
-            _context.SaveChanges();
-
+            _job.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync(ct);
         }
 
         private void SignDomainAtDnsServer()
@@ -103,7 +113,7 @@ namespace Backend.Scheduler
             var defaultTtl = Convert.ToDouble(_utilities.GetSetting("DefaultTtl"));
             if (_domain.Ttl == 0)
             {
-                _job.RunAfter = DateTime.Now.AddSeconds(defaultTtl);
+                _job.RunAfter = DateTime.UtcNow.AddSeconds(defaultTtl);
             }
             else
             {
@@ -112,7 +122,7 @@ namespace Backend.Scheduler
                 {
                     ttl = _domain.Ttl;
                 }
-                _job.RunAfter = DateTime.Now.AddSeconds(ttl);
+                _job.RunAfter = DateTime.UtcNow.AddSeconds(ttl);
             }
         }
 
@@ -121,7 +131,7 @@ namespace Backend.Scheduler
             _globals.UploadKey(_job);
             _job.Step = JobStep.DeleteOldKeyFromRegistry;
             //TODO: Upload Complete is now 2 hours hard coded, make a checker to see if key is live
-            _job.RunAfter = DateTime.Now.AddHours(2);
+            _job.RunAfter = DateTime.UtcNow.AddHours(2);
             _context.Logs.Add(Logging.LogJob(_job, LogType.Info, "UploadKey step completed"));
         }
 
@@ -139,7 +149,7 @@ namespace Backend.Scheduler
                     if (!response.Success)
                     {
                         _context.Logs.Add(Logging.LogJob(_job, LogType.Error, response.Error + " (we will try again in 24 hours)"));
-                        _job.RunAfter = DateTime.Now.AddHours(24); //try again in 24 hours
+                        _job.RunAfter = DateTime.UtcNow.AddHours(24); //try again in 24 hours
                     }
                     else
                     {
@@ -152,7 +162,7 @@ namespace Backend.Scheduler
             {
                 _job.Step = JobStep.DeleteOldKeyFromDnsServer;
                 //TODO: Upload Complete is now 2 hours hard coded, make a checker to see if key is live
-                _job.RunAfter = DateTime.Now.AddHours(2);
+                _job.RunAfter = DateTime.UtcNow.AddHours(2);
                 _context.Logs.Add(Logging.LogJob(_job, LogType.Info, "DeleteOldKeyFromRegistry step completed"));
             }
         }
@@ -169,8 +179,8 @@ namespace Backend.Scheduler
                 var failRerun = Convert.ToDouble(_utilities.GetSetting("DomainSignFailRerun"));
                 _job.IsCompleted = false;
                 _job.IsSuccessful = false;
-                _job.RunAfter = DateTime.Now.AddMilliseconds(failRerun);
-                _job.UpdatedAt = DateTime.Now;
+                _job.RunAfter = DateTime.UtcNow.AddMilliseconds(failRerun);
+                _job.UpdatedAt = DateTime.UtcNow;
                 _context.Logs.Add(Logging.LogJob(_job, LogType.Error, "Could not get the domain info from the DNS Server, check the DNS server logs"));
                 return;
             }
@@ -189,7 +199,7 @@ namespace Backend.Scheduler
             {
                 case DnssecStatus.Signed:
                     _domain.SignMatch = true;
-                    _domain.SignedAt = DateTime.Now;
+                    _domain.SignedAt = DateTime.UtcNow;
                     _job.IsSuccessful = true;
                     _job.CryptokeyId = null;
                     _job.Cryptokey = null;

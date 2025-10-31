@@ -7,6 +7,7 @@ using Backend.Models;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Providers;
+using Microsoft.Extensions.Logging;
 
 namespace Backend.Scheduler
 {
@@ -15,30 +16,36 @@ namespace Backend.Scheduler
         private readonly ApplicationDbContext _context;
         private readonly IUtilities _utilities;
         private readonly IGlobals _globals;
+        private readonly Microsoft.Extensions.Logging.ILogger<SignDomain> _logger;
 
         private readonly Job _job;
-        private readonly Domain _domain;
-        private readonly IRegistryProvider _registryProvider;
+        private Domain _domain;
+        private IRegistryProvider _registryProvider;
 
-        public SignDomain(ApplicationDbContext context, IUtilities utilities, IGlobals globals, Job job, List<IRegistryProvider> registryProviders, List<Registry> registries)
+        public SignDomain(ApplicationDbContext context, IUtilities utilities, IGlobals globals, Job job, List<IRegistryProvider> registryProviders, List<Registry> registries, Microsoft.Extensions.Logging.ILogger<SignDomain> logger = null)
         {
             _context = context;
             _utilities = utilities;
             _globals = globals;
+            _logger = logger;
 
             _job = job;
             _globals.Registries = registries;
             _globals.RegistryProviders = registryProviders;
-            
-            //_globals.Utilities = _utilities;
-            //_globals = new Globals
-            //{
-            //    Utilities = _utilities,
-            //    Context = _context,
-            //    Registries = registries,
-            //    RegistryProviders = registryProviders
-            //};
+        }
 
+        public void LogInfo(string message)
+        {
+            _logger?.LogInformation("{Message} for job {JobId}", message, _job.Id);
+        }
+
+        public void LogError(Exception e, string message)
+        {
+            _logger?.LogError(e, "{Message} for job {JobId}", message, _job.Id);
+        }
+
+        public async System.Threading.Tasks.Task ExecuteAsync(System.Threading.CancellationToken ct = default)
+        {
             double failRerun;
             try
             {
@@ -46,10 +53,10 @@ namespace Backend.Scheduler
             }
             catch (Exception e)
             {
-                _context.Logs.Add(Logging.LogJob(_job, LogType.Error, "Config table has wrong value for 'DomainSignFailRerun' (not convertable to double), will retry in 1 day", e.InnerException.ToString()));
-                job.RunAfter = DateTime.Now.AddDays(1);
-                job.UpdatedAt = DateTime.Now;
-                _context.SaveChanges();
+                _context.Logs.Add(Logging.LogJob(_job, LogType.Error, "Config table has wrong value for 'DomainSignFailRerun' (not convertable to double), will retry in 1 day", e.ToString()));
+                _job.RunAfter = DateTime.UtcNow.AddDays(1);
+                _job.UpdatedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync(ct);
                 return;
             }
 
@@ -62,10 +69,10 @@ namespace Backend.Scheduler
             if (_domain == null)
             {
                 _context.Logs.Add(Logging.LogJob(_job, LogType.Error, "No domain found with ID " + _job.DomainId + " the job will now stop"));
-                job.IsCompleted = true;
-                job.IsSuccessful = false;
-                job.UpdatedAt = DateTime.Now;
-                _context.SaveChanges();
+                _job.IsCompleted = true;
+                _job.IsSuccessful = false;
+                _job.UpdatedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync(ct);
                 return;
             }
 
@@ -73,10 +80,10 @@ namespace Backend.Scheduler
             if (_domain.ExcludeSigning)
             {
                 _context.Logs.Add(Logging.LogJob(_job, LogType.Warning, "This domain is excluded from signing, the job will now stop"));
-                job.IsCompleted = true;
-                job.IsSuccessful = false;
-                job.UpdatedAt = DateTime.Now;
-                _context.SaveChanges();
+                _job.IsCompleted = true;
+                _job.IsSuccessful = false;
+                _job.UpdatedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync(ct);
                 return;
             }
 
@@ -84,14 +91,14 @@ namespace Backend.Scheduler
             if (_domain.CustomRegistryId == null)
             {
                 _context.Logs.Add(Logging.LogJob(_job, LogType.Warning, "This domain has no registry anymore (domain cancelled or transferred while signing?), the job will now stop"));
-                job.IsCompleted = true;
-                job.IsSuccessful = false;
-                job.UpdatedAt = DateTime.Now;
-                _context.SaveChanges();
+                _job.IsCompleted = true;
+                _job.IsSuccessful = false;
+                _job.UpdatedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync(ct);
                 return;
             }
 
-            _registryProvider = _globals.GetRegistryProvider(registries, registryProviders, _domain);
+            _registryProvider = _globals.GetRegistryProvider(_globals.Registries, _globals.RegistryProviders, _domain);
             if (_registryProvider == null)
             {
                 _utilities.JobFail(_job, failRerun);
@@ -119,8 +126,8 @@ namespace Backend.Scheduler
                     break;
             }
 
-            _job.UpdatedAt = DateTime.Now;
-            _context.SaveChanges();
+            _job.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync(ct);
         }
 
         private bool InitJob()
@@ -144,8 +151,8 @@ namespace Backend.Scheduler
                 var failRerun = Convert.ToDouble(_utilities.GetSetting("DomainSignFailRerun"));
                 _job.IsCompleted = false;
                 _job.IsSuccessful = false;
-                _job.RunAfter = DateTime.Now.AddMilliseconds(failRerun);
-                _job.UpdatedAt = DateTime.Now;
+                _job.RunAfter = DateTime.UtcNow.AddMilliseconds(failRerun);
+                _job.UpdatedAt = DateTime.UtcNow;
                 _context.Logs.Add(Logging.LogJob(_job, LogType.Error, "Could not get the domain info from the DNS Server, check the DNS server logs"));
                 return false;
             }
@@ -161,7 +168,7 @@ namespace Backend.Scheduler
                     // Job is already running so job is cancelled
                     _job.IsSuccessful = false;
                     _job.IsCompleted = true;
-                    _job.UpdatedAt = DateTime.Now;
+                    _job.UpdatedAt = DateTime.UtcNow;
                     _context.Logs.Add(Logging.LogJob(_job, LogType.Warning, "Another job was already running"));
                     _context.SaveChanges();
                     return false;
@@ -181,7 +188,7 @@ namespace Backend.Scheduler
                         _domain.SignMatch = true;
                         _job.IsSuccessful = false;
                         _job.IsCompleted = true;
-                        _job.UpdatedAt = DateTime.Now;
+                        _job.UpdatedAt = DateTime.UtcNow;
                         _context.Logs.Add(Logging.LogJob(_job, LogType.Info, "The domain was already signed succesfully"));
                         _context.SaveChanges();
                         return false;
@@ -228,7 +235,7 @@ namespace Backend.Scheduler
 
             if (_domain.Ttl == 0)
             {
-                _job.RunAfter = DateTime.Now.AddSeconds(defaultTtl);
+                _job.RunAfter = DateTime.UtcNow.AddSeconds(defaultTtl);
             }
             else
             {
@@ -237,7 +244,7 @@ namespace Backend.Scheduler
                 {
                     ttl = _domain.Ttl;
                 }
-                _job.RunAfter = DateTime.Now.AddSeconds(ttl);
+                _job.RunAfter = DateTime.UtcNow.AddSeconds(ttl);
             }
 
             _context.Logs.Add(Logging.LogJob(_job, LogType.Info, "SignDomainAtDnsServer step completed"));
@@ -247,7 +254,7 @@ namespace Backend.Scheduler
         {
             _globals.UploadKey(_job);
             _job.Step = JobStep.SignDomainCompleted;
-            _job.RunAfter = DateTime.Now.AddHours(2);
+            _job.RunAfter = DateTime.UtcNow.AddHours(2);
 
             _context.Logs.Add(Logging.LogJob(_job, LogType.Info, "UploadKey step completed"));
         }

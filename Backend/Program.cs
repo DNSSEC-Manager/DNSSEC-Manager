@@ -62,6 +62,9 @@ namespace Backend
 
             services.AddRazorPages();
 
+            // Hosted background scheduler
+            services.AddHostedService<JobSchedulerService>();
+
             // Custom services
             services.AddScoped<IProviderDecider, ProviderDecider>();
             services.AddScoped<IUtilities, Utilities>();

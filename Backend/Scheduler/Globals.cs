@@ -79,7 +79,7 @@ namespace Backend.Scheduler
                 {
                     Domain = domain,
                     DnsServer = domain.DnsServer,
-                    CreatedAt = DateTime.Now,
+                    CreatedAt = DateTime.UtcNow,
                     Message = "Could not get the domain info from the DNS Server",
                     LogType = LogType.Error,
                     RawMessage = e.Message

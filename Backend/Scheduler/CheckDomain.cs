@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Backend.Business;
 using Backend.Controllers;
 using Backend.Data;
@@ -8,6 +10,7 @@ using Backend.Models;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Providers;
+using Microsoft.Extensions.Logging;
 
 namespace Backend.Scheduler
 {
@@ -16,6 +19,7 @@ namespace Backend.Scheduler
         private readonly ApplicationDbContext _context;
         private readonly IUtilities _utilities;
         private readonly IGlobals _globals;
+        private readonly Microsoft.Extensions.Logging.ILogger<CheckDomain> _logger;
         //private readonly bool _close;
         public Job _job;
         //public List<Registry> _initializedRegistries;
@@ -24,7 +28,7 @@ namespace Backend.Scheduler
         private readonly List<IRegistryProvider> _registryProviders;
         private readonly List<Registry> _registries;
 
-        public CheckDomain(ApplicationDbContext context, IUtilities utilities, IGlobals globals, Job job, List<IRegistryProvider> registryProviders, List<Registry> registries)
+        public CheckDomain(ApplicationDbContext context, IUtilities utilities, IGlobals globals, Job job, List<IRegistryProvider> registryProviders, List<Registry> registries, Microsoft.Extensions.Logging.ILogger<CheckDomain> logger = null)
         {
             _context = context;
             _utilities = utilities;
@@ -35,7 +39,13 @@ namespace Backend.Scheduler
 
             _registryProviders = registryProviders;
             _registries = registries;
+            _logger = logger;
+        }
 
+        public async Task ExecuteAsync(CancellationToken ct = default)
+        {
+            // Keeping existing sync implementation for now; run on thread pool to avoid blocking scheduler loop
+            await Task.Run(() => Start(), ct);
         }
 
         public void Start()
@@ -43,7 +53,7 @@ namespace Backend.Scheduler
             var amountOfDomainsToCheck = Convert.ToInt32(_utilities.GetSetting("CheckAlldomainsPerRun"));
             var msRunJobAgain = Convert.ToDouble(_utilities.GetSetting("CheckAllDomainsRunEvery"));
             var msCheckDomainAgainEvery = Convert.ToDouble(_utilities.GetSetting("CheckAllDomainsReRunAfter"));
-            var datetimeValidHours = DateTime.Now.AddMilliseconds(msCheckDomainAgainEvery * -1);
+            var datetimeValidHours = DateTime.UtcNow.AddMilliseconds(msCheckDomainAgainEvery * -1);
 
             var domains = _context.Domains
                 .Include(b => b.DnsServer)
@@ -57,9 +67,9 @@ namespace Backend.Scheduler
 
             if (domains.Count == 0)
             {
-                _job.RunAfter = DateTime.Now.AddMilliseconds(msRunJobAgain);
+                _job.RunAfter = DateTime.UtcNow.AddMilliseconds(msRunJobAgain);
                 _job.IsCompleted = true;
-                _job.UpdatedAt = DateTime.Now;
+                _job.UpdatedAt = DateTime.UtcNow;
                 _context.Add(Logging.LogJob(_job, LogType.Info, "All domains are fresh."));
                 _context.SaveChanges();
                 return;
@@ -67,9 +77,9 @@ namespace Backend.Scheduler
 
             CheckListOfDomains(domains);
 
-            _job.RunAfter = DateTime.Now.AddMilliseconds(msRunJobAgain);
+            _job.RunAfter = DateTime.UtcNow.AddMilliseconds(msRunJobAgain);
             _job.IsCompleted = true;
-            _job.UpdatedAt = DateTime.Now;
+            _job.UpdatedAt = DateTime.UtcNow;
             string _checkedDomains = "";
             foreach (var domain in domains)
             {
@@ -97,7 +107,7 @@ namespace Backend.Scheduler
                 var registryProvider = CheckRegistry(domain);
                 if (registryProvider == null)
                 {
-                    domain.LastChecked = DateTime.Now;
+                    domain.LastChecked = DateTime.UtcNow;
                     //domain.IsReservedByScheduler = false;
                     _context.SaveChanges();
                     continue;
@@ -122,7 +132,7 @@ namespace Backend.Scheduler
                 //domain.IsReservedByScheduler = false;
                 //if (domain.SignedAt == DateTime.MinValue || domain.SignedAt == null)
                 //{
-                //    domain.SignedAt = DateTime.Now;
+                //    domain.SignedAt = DateTime.UtcNow;
 
                 //}
                 //_context.SaveChanges();
@@ -132,26 +142,26 @@ namespace Backend.Scheduler
                 if (domain.SignMatch && automaticKeyRollover)
                 {
                     var setting = Convert.ToInt32(_utilities.GetSetting("KeyRolloverTime"));
-                    var dateTimeToCheck = DateTime.Now.AddMinutes(setting * -1);
+                    var dateTimeToCheck = DateTime.UtcNow.AddMinutes(setting * -1);
                     if (domain.SignedAt <= dateTimeToCheck)
                     {
                         var jobsOnDomain = _context.Jobs.Where(b => b.IsCompleted == false && b.DomainId == domain.Id).ToList();
                         if (jobsOnDomain.Count == 0)
                         {
                             var newJob = new Job
-                            {
-                                Domain = domain,
-                                DomainId = domain.Id,
-                                Task = JobName.KeyRolloverDomain,
-                                CreatedAt = DateTime.Now,
-                                RunAfter = DateTime.Now
-                            };
+                {
+                    Domain = domain,
+                    DomainId = domain.Id,
+                    Task = JobName.KeyRolloverDomain,
+                    CreatedAt = DateTime.UtcNow,
+                    RunAfter = DateTime.UtcNow
+                };
                             _context.Add(newJob);
 
                         }
                     }
                 }
-                domain.LastChecked = DateTime.Now;
+                domain.LastChecked = DateTime.UtcNow;
                 _context.SaveChanges();
             }
 
@@ -318,7 +328,7 @@ namespace Backend.Scheduler
                 {
                     LogType = LogType.Error,
                     Domain = domain,
-                    CreatedAt = DateTime.Now,
+                    CreatedAt = DateTime.UtcNow,
                     Job = _job,
                     Message = "Error getting Domain info from registry: " + registryDomainInfo.Error
                 };
@@ -364,7 +374,7 @@ namespace Backend.Scheduler
             if (!foundNameservers)
             {
                 // Generate unique name for the new nameserver group
-                var uniqueName = "NewNameserverGroup" + DateTime.Now.Ticks.ToString();
+                var uniqueName = "NewNameserverGroup" + DateTime.UtcNow.Ticks.ToString();
                 var newNameserverGroup = new NameServerGroup { Name = uniqueName };
                 _context.Add(newNameserverGroup);
                 _context.SaveChanges();
@@ -390,16 +400,16 @@ namespace Backend.Scheduler
                 if (hadMatchingNameServers)
                 {
                     var newJob = new Job
-                    {
-                        Domain = domain,
-                        CreatedAt = DateTime.Now,
-                        RunAfter = DateTime.Now,
-                        Task = JobName.UnSignDomain
-                    };
+            {
+                Domain = domain,
+                CreatedAt = DateTime.UtcNow,
+                RunAfter = DateTime.UtcNow,
+                Task = JobName.UnSignDomain
+            };
                     var newLog = new Log
                     {
                         Domain = domain,
-                        CreatedAt = DateTime.Now,
+                        CreatedAt = DateTime.UtcNow,
                         Job = _job,
                         Message = "The domain no longer has matching nameservers, the domain will be unsigned"
                     };
@@ -436,8 +446,8 @@ namespace Backend.Scheduler
                         {
                             Domain = domain,
                             DomainId = domain.Id,
-                            CreatedAt = DateTime.Now,
-                            RunAfter = DateTime.Now,
+                            CreatedAt = DateTime.UtcNow,
+                            RunAfter = DateTime.UtcNow,
                             Task = JobName.SignDomain
                         });
                         _context.SaveChanges();
@@ -451,8 +461,8 @@ namespace Backend.Scheduler
                         {
                             Domain = domain,
                             DomainId = domain.Id,
-                            CreatedAt = DateTime.Now,
-                            RunAfter = DateTime.Now,
+                            CreatedAt = DateTime.UtcNow,
+                            RunAfter = DateTime.UtcNow,
                             Task = JobName.SignDomain
                         });
                     }

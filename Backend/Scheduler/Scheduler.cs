@@ -2,10 +2,12 @@
 using Backend.Data;
 using Backend.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Providers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Backend.Scheduler
@@ -16,43 +18,23 @@ namespace Backend.Scheduler
         private readonly IUtilities _utilities;
         private readonly IProviderDecider _providerDecider;
         private readonly IGlobals _globals;
+        private readonly ILogger<Scheduler> _logger;
+        private readonly ILoggerFactory _loggerFactory;
 
-        private readonly List<Job> _jobs;
-        //private readonly List<Registry> _initializedRegistries = new List<Registry>();
-
-        //OLD VARIABLES:
-        //private readonly List<IRegistryProvider> _registryProviders;
-        //private readonly List<Registry> _registries;
         private readonly List<IRegistryProvider> _registryProviders = new List<IRegistryProvider>();
         private readonly List<Registry> _registries = new List<Registry>();
 
-        public Scheduler(ApplicationDbContext context, IUtilities utilities, IProviderDecider providerDecider, IGlobals globals)
+        public Scheduler(ApplicationDbContext context, IUtilities utilities, IProviderDecider providerDecider, IGlobals globals, ILogger<Scheduler> logger, ILoggerFactory loggerFactory)
         {
             _context = context;
             _utilities = utilities;
             _providerDecider = providerDecider;
             _globals = globals;
+            _logger = logger;
+            _loggerFactory = loggerFactory;
 
-            // Get all jobs to run
-            _jobs = _context.Jobs.Where(b =>
-                    (b.RunAfter <= DateTime.Now && !b.IsPermanent && !b.IsCompleted) ||
-                    (b.RunAfter <= DateTime.Now && b.IsPermanent))
-                    .Include(b => b.Cryptokey)
-                    .Include(j => j.DnsServer)
-                    .ToList();
-
-            // Initialize Registries
-            var registriesFromDb = _context.Registries.ToList();
-            //foreach (var registry in registriesFromDb)
-            //{
-            //    registry.RegistryProvider = _providerDecider.InitializeRegistryProvider(registry);
-            //    _initializedRegistries.Add(registry);
-            //}
-
-            // OLD METHOD:
-            //_registryProviders = new List<IRegistryProvider>();
-            //_registries = new List<Registry>();
-            //var registriesFromDb = _context.Registries.ToList();
+            // Initialize Registries (consider lazy-init per job in future)
+            var registriesFromDb = _context.Registries.AsNoTracking().ToList();
             foreach (var registry in registriesFromDb)
             {
                 IRegistryProvider provider;
@@ -67,66 +49,77 @@ namespace Backend.Scheduler
                         Message = "Scheduler error while initializing RegistryProviders: " + e.Message,
                         LogType = LogType.Error,
                         RegistryId = registry.Id,
-                        CreatedAt = DateTime.Now,
-                        RawMessage = e.InnerException.ToString()
+                        CreatedAt = DateTime.UtcNow,
+                        RawMessage = e.ToString()
                     });
-
-                    _context.SaveChanges();
+                    _logger.LogError(e, "Error initializing registry provider for {RegistryId}", registry.Id);
                     continue;
                 }
                 _registryProviders.Add(provider);
                 _registries.Add(registry);
             }
-
         }
 
-        public void Run()
+        // Backward-compatible constructor for existing call sites (e.g., controller)
+        public Scheduler(ApplicationDbContext context, IUtilities utilities, IProviderDecider providerDecider, IGlobals globals)
+            : this(context, utilities, providerDecider, globals, Microsoft.Extensions.Logging.Abstractions.NullLogger<Scheduler>.Instance, Microsoft.Extensions.Logging.Abstractions.NullLoggerFactory.Instance)
+        { }
+
+        public async Task RunOnceAsync(CancellationToken ct = default)
         {
-            foreach (var job in _jobs)
+            var now = DateTime.UtcNow;
+            var jobs = await _context.Jobs.Where(b =>
+                        (b.RunAfter <= now && !b.IsPermanent && !b.IsCompleted) ||
+                        (b.RunAfter <= now && b.IsPermanent))
+                    .Include(b => b.Cryptokey)
+                    .Include(j => j.DnsServer)
+                    .ToListAsync(ct);
+
+            foreach (var job in jobs)
             {
                 try
                 {
-                switch (job.Task)
-                {
-                    case JobName.CheckForDomainChanges:
-                        new DomainChanges(_context, job, _utilities, _providerDecider);
-                        break;
+                    _logger?.LogInformation("Dispatching job {JobId} {Task}", job.Id, job.Task);
+                    switch (job.Task)
+                    {
+                        case JobName.CheckForDomainChanges:
+                            var domainChanges = new DomainChanges(_context, job, _utilities, _providerDecider);
+                            await domainChanges.ExecuteAsync(ct);
+                            break;
 
-                    case JobName.CheckDomain:
-                        var checkDomains = new CheckDomain(_context, _utilities, _globals, job, _registryProviders, _registries);
-                        checkDomains.Start();
-                        break;
+                        case JobName.CheckDomain:
+                            var checkDomains = new CheckDomain(_context, _utilities, _globals, job, _registryProviders, _registries, _loggerFactory?.CreateLogger<CheckDomain>());
+                            await checkDomains.ExecuteAsync(ct);
+                            break;
 
-                    case JobName.SignDomain:
-                        new SignDomain(_context, _utilities, _globals, job, _registryProviders, _registries);
-                        break;
+                        case JobName.SignDomain:
+                            var signDomain = new SignDomain(_context, _utilities, _globals, job, _registryProviders, _registries, _loggerFactory?.CreateLogger<SignDomain>());
+                            await signDomain.ExecuteAsync(ct);
+                            break;
 
-                    case JobName.UnSignDomain:
-                        new UnsignDomain(_context, _utilities, _globals, job, _registryProviders, _registries);
-                        break;
+                        case JobName.UnSignDomain:
+                            var unsign = new UnsignDomain(_context, _utilities, _globals, job, _registryProviders, _registries, _loggerFactory?.CreateLogger<UnsignDomain>());
+                            await unsign.ExecuteAsync(ct);
+                            break;
 
-                    case JobName.KeyRolloverDomain:
-                        new KeyRolloverDomain(_context, _utilities, _globals, job, _registryProviders, _registries);
-                        break;
-                }
+                        case JobName.KeyRolloverDomain:
+                            var rollover = new KeyRolloverDomain(_context, _utilities, _globals, job, _registryProviders, _registries, _loggerFactory?.CreateLogger<KeyRolloverDomain>());
+                            await rollover.ExecuteAsync(ct);
+                            break;
+
+                        default:
+                            _context.Logs.Add(Logging.LogGeneral(LogType.Warning, $"Unsupported job type: {job.Task}", null));
+                            break;
+                    }
                 }
                 catch (Exception e)
                 {
-                    if (e != null)
-                    {
-                        _context.Logs.Add(new Log
-                        {
-                            Message = "Scheduler crashed while executing jobid: " + job.Id + " Exception: " + e.Message,
-                            LogType = LogType.Error,
-                            CreatedAt = DateTime.Now,
-                            RawMessage = e.InnerException.ToString()
-                        });
-                    }
                     _context.Logs.Add(new Log
                     {
-                        Message = "Scheduler crashed while executing jobid: " + job.Id,
+                        Message = $"Scheduler crashed while executing jobid: {job.Id} Exception: {e.Message}",
                         LogType = LogType.Error,
-                        CreatedAt = DateTime.Now,
+                        CreatedAt = DateTime.UtcNow,
+                        RawMessage = e.ToString()
                     });
                 }
             }
@@ -139,24 +132,11 @@ namespace Backend.Scheduler
                 }
                 catch (Exception e)
                 {
-                    _context.Logs.Add(Logging.LogGeneral(LogType.Error, "Scheduler error while closing RegistryProviders: " + e.Message, e.InnerException.ToString()));
+                    _context.Logs.Add(Logging.LogGeneral(LogType.Error, "Scheduler error while closing RegistryProviders: " + e.Message, e.ToString()));
                 }
             }
 
-            //foreach (var (registryProvider, index) in _registryProviders.WithIndex())
-            //{
-            //    try
-            //    {
-            //        registryProvider.Close();
-            //    }
-            //    catch (Exception)
-            //    {
-            //        _context.Logs.Add(Logging.LogGeneral(LogType.Error,
-            //            "Registry: " + _registries[index].Name + " Error: Connection can not be closed"));
-            //    }
-            //}
-
-            _context.SaveChanges();
+            await _context.SaveChangesAsync(ct);
         }
     }
 

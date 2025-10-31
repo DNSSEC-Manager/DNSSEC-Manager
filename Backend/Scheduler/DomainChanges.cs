@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Backend.Business;
 using Backend.Data;
 using Backend.Models;
@@ -17,8 +19,8 @@ namespace Backend.Scheduler
         private readonly IProviderDecider _providerDecider;
 
         private readonly Job _job;
-        private readonly IDnsProvider _dnsProvider;
-        private readonly DnsServer _dnsServer;
+        private IDnsProvider _dnsProvider;
+        private DnsServer _dnsServer;
 
         public DomainChanges(ApplicationDbContext context, Job job, IUtilities utilities, IProviderDecider providerDecider)
         {
@@ -26,7 +28,10 @@ namespace Backend.Scheduler
             _job = job;
             _utilities = utilities;
             _providerDecider = providerDecider;
+        }
 
+        public async Task ExecuteAsync(CancellationToken ct = default)
+        {
             _dnsServer = _job.DnsServer;
             try
             {
@@ -36,6 +41,7 @@ namespace Backend.Scheduler
             {
                 // DNS provider not found
                 _context.Logs.Add(Logging.LogJob(_job, LogType.Error, e.Message));
+                await _context.SaveChangesAsync(ct);
                 return;
             }
 
@@ -43,6 +49,7 @@ namespace Backend.Scheduler
             if (zones == null)
             {
                 // Could not get the zones, job fails here
+                await _context.SaveChangesAsync(ct);
                 return;
             }
 
@@ -58,10 +65,9 @@ namespace Backend.Scheduler
             AddNewDomains(newDomains);
             RemovedDomains(removedDomains);
 
-            _job.UpdatedAt = DateTime.Now;
-            _context.SaveChanges();
+            _job.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync(ct);
             _utilities.JobSuccess(_job, Convert.ToDouble(_utilities.GetSetting("DomainChangesRunEvery")));
-
         }
 
         private List<string> GetZones()
@@ -93,7 +99,7 @@ namespace Backend.Scheduler
                 if (existingDomain != null)
                 {
                     existingDomain.RemovedFromDnsServer = false;
-                    existingDomain.LastChecked = DateTime.Now;
+                    existingDomain.LastChecked = DateTime.UtcNow;
 
                     _context.Logs.Add(Logging.LogJob(_job, LogType.Info,
                         "Reactivating existing domain: " + existingDomain.Name));
@@ -107,10 +113,10 @@ namespace Backend.Scheduler
                         {
                             Name = newDomainLowercase,
                             DnsServerId = _dnsServer.Id,
-                            CreatedAt = DateTime.Now,
+                            CreatedAt = DateTime.UtcNow,
                             TopLevelDomainId = tildId,
                             Ttl = _dnsProvider.GetTtl(newDomainLowercase),
-                            SignedAt = DateTime.Now
+                            SignedAt = DateTime.UtcNow
                         });
 
                         _context.Logs.Add(Logging.LogJob(_job, LogType.Info, "New domain added: " + newDomainLowercase));
@@ -130,7 +136,7 @@ namespace Backend.Scheduler
                 if (existingDomain != null)
                 {
                     existingDomain.RemovedFromDnsServer = true;
-                    existingDomain.LastChecked = DateTime.Now;
+                    existingDomain.LastChecked = DateTime.UtcNow;
                     existingDomain.CustomRegistryId = null;
                     existingDomain.NameServerGroupId = null;
                     existingDomain.SignMatch = false;
