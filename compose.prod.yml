@@ -1,0 +1,124 @@
+services:
+  traefik:
+    image: traefik:v3.1
+    container_name: traefik
+    restart: unless-stopped
+
+    command:
+      # Dashboard
+      - "--api.dashboard=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+
+      # Entrypoints
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+
+      # Let's Encrypt
+      - "--certificatesresolvers.letsencrypt.acme.email=${EMAIL}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+
+    ports:
+      - "80:80"
+      - "443:443"
+
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "letsencrypt:/letsencrypt"
+
+    networks:
+      - traefik_proxy
+
+    labels:
+      # Dashboard
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard.rule=Host(`${DOMAIN_DASHBOARD}`)"
+      - "traefik.http.routers.dashboard.entrypoints=websecure"
+      - "traefik.http.routers.dashboard.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.dashboard.service=api@internal"
+
+  backend:
+    image: ghcr.io/dnssec-manager/dnssec-manager:latest
+    container_name: dnssecmanager-backend
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      HTTP_PORTS: 8080
+      DNS_SERVER_NAME: dnssecmanager
+      DNS_SERVER_API_URL: http://pdns:8081
+      DNS_SERVER_API_KEY: ${PDNS_API_KEY}
+    volumes:
+      - app-data:/app/storage
+    networks:
+      - backend
+      - traefik_proxy
+    depends_on:
+      - pdns
+
+    labels:
+      - "traefik.enable=true"
+
+      # Router for backend
+      - "traefik.http.routers.dnssecmanager.rule=Host(`${DOMAIN}`)"
+      - "traefik.http.routers.dnssecmanager.entrypoints=websecure"
+      - "traefik.http.routers.dnssecmanager.tls=true"
+      - "traefik.http.routers.dnssecmanager.tls.certresolver=letsencrypt"
+
+      # Tell Traefik what internal port to use
+      - "traefik.http.services.dnssecmanager.loadbalancer.server.port=8080"
+
+  pdns:
+    image: pschiffe/pdns-mysql:4.8
+    container_name: dnssecmanager-pdns
+    restart: unless-stopped
+    environment:
+      PDNS_launch: gmysql
+      PDNS_gmysql_host: db
+      PDNS_gmysql_user: pdns
+      PDNS_gmysql_password: ${PDNS_DB_PASSWORD}
+      PDNS_gmysql_dbname: pdns
+      PDNS_gmysql_dnssec: yes
+
+      # PowerDNS API (internal only)
+      PDNS_api: yes
+      PDNS_api_key: ${PDNS_API_KEY}
+      PDNS_webserver: yes
+      PDNS_webserver_address: 0.0.0.0
+      PDNS_webserver_port: 8081
+      PDNS_webserver_allow_from: 0.0.0.0/0
+
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+    networks:
+      - backend
+    depends_on:
+      - db
+
+  db:
+    image: mariadb:11.8
+    container_name: pdns-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: pdns
+      MYSQL_USER: pdns
+      MYSQL_PASSWORD: ${PDNS_DB_PASSWORD}
+    volumes:
+      - pdns-data:/var/lib/mysql
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge
+  traefik_proxy:
+    driver: bridge
+
+volumes:
+  letsencrypt:
+  pdns-data:
+  app-data:
