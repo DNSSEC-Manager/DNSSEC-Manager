@@ -37,6 +37,8 @@ services:
       - "traefik.http.routers.dashboard.rule=Host(`${DOMAIN_DASHBOARD}`)"
       - "traefik.http.routers.dashboard.entrypoints=websecure"
       - "traefik.http.routers.dashboard.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.dashboard.middlewares=dashboard-auth"
+      - "traefik.http.middlewares.dashboard-auth.basicauth.users=${TRAEFIK_DASH_USER}:${TRAEFIK_DASH_AUTH}"
       - "traefik.http.routers.dashboard.service=api@internal"
 
   backend:
@@ -56,17 +58,12 @@ services:
       - traefik_proxy
     depends_on:
       - pdns
-
     labels:
       - "traefik.enable=true"
-
-      # Router for backend
       - "traefik.http.routers.dnssecmanager.rule=Host(`${DOMAIN}`)"
       - "traefik.http.routers.dnssecmanager.entrypoints=websecure"
       - "traefik.http.routers.dnssecmanager.tls=true"
       - "traefik.http.routers.dnssecmanager.tls.certresolver=letsencrypt"
-
-      # Tell Traefik what internal port to use
       - "traefik.http.services.dnssecmanager.loadbalancer.server.port=8080"
 
   pdns:
@@ -80,26 +77,32 @@ services:
       PDNS_gmysql_password: ${PDNS_DB_PASSWORD}
       PDNS_gmysql_dbname: pdns
       PDNS_gmysql_dnssec: yes
-
-      # PowerDNS API (internal only)
       PDNS_api: yes
       PDNS_api_key: ${PDNS_API_KEY}
       PDNS_webserver: yes
       PDNS_webserver_address: 0.0.0.0
       PDNS_webserver_port: 8081
       PDNS_webserver_allow_from: 0.0.0.0/0
-
-    ports:
-      - "53:53/tcp"
-      - "53:53/udp"
     networks:
       - backend
+      - traefik_proxy
     depends_on:
       - db
+    labels:
+      # PDNS stats via subdomain
+      - "traefik.enable=true"
+      - "traefik.http.routers.pdns.rule=Host(`pdns.${DOMAIN}`)"
+      - "traefik.http.routers.pdns.entrypoints=websecure"
+      - "traefik.http.routers.pdns.tls=true"
+      - "traefik.http.routers.pdns.tls.certresolver=letsencrypt"
+      - "traefik.http.services.pdns.loadbalancer.server.port=8081"
+      # Optioneel Basic Auth
+      - "traefik.http.routers.pdns.middlewares=pdns-auth"
+      - "traefik.http.middlewares.pdns-auth.basicauth.users=${TRAEFIK_DASH_USER}:${TRAEFIK_DASH_AUTH}"
 
   db:
     image: mariadb:11.8
-    container_name: pdns-db
+    container_name: dnssecmanager-db
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
