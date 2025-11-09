@@ -5,11 +5,11 @@
       context: .
       dockerfile: Backend/Dockerfile
     ports:
-      - "5000:5000"
+      - "8080:8080"
     restart: unless-stopped
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - HTTP_PORTS=5000
+      - HTTP_PORTS=8080
       - DNS_SERVER_NAME=docker
       - DNS_SERVER_API_URL=http://pdns:8081
       - DNS_SERVER_API_KEY=supersecretapikey
