@@ -73,6 +73,8 @@ namespace Backend
 
             var app = builder.Build();
 
+            app.UseForwardedHeaders();
+
             // Middleware pipeline
             app.UseDeveloperExceptionPage();
             app.UseMigrationsEndPoint();
