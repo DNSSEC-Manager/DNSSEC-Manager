@@ -20,13 +20,10 @@ WORKDIR /app
 # Create persistence folders (can also be mounted as volumes)
 RUN mkdir -p /app/data
 
-#ENV ASPNETCORE_URLS=http://+:5000
-#ENV ASPNETCORE_ENVIRONMENT=Production
-
 # Copy published app
 COPY --from=build /app/publish .
 
 # Expose port
-EXPOSE 5000
+EXPOSE 8080
 
 ENTRYPOINT ["dotnet", "Backend.dll"]
