@@ -53,11 +53,15 @@ public class DnsServerService : IDnsServerService
         var name = Environment.GetEnvironmentVariable("DNS_SERVER_NAME");
         var baseUrl = Environment.GetEnvironmentVariable("DNS_SERVER_API_URL");
         var authToken = Environment.GetEnvironmentVariable("DNS_SERVER_API_KEY");
+        var ns1ev = Environment.GetEnvironmentVariable("DNS_SERVER_NS1");
+        var ns2ev = Environment.GetEnvironmentVariable("DNS_SERVER_NS2");
 
-        // Check if all three variables are filled
+        // Check if all variables are filled
         if (string.IsNullOrWhiteSpace(name) || 
             string.IsNullOrWhiteSpace(baseUrl) || 
-            string.IsNullOrWhiteSpace(authToken))
+            string.IsNullOrWhiteSpace(authToken) ||
+            string.IsNullOrWhiteSpace(ns1ev) ||
+            string.IsNullOrWhiteSpace(ns2ev))
         {
             //Console.WriteLine("DNS environment variables not fully configured — skipping creation.");
             return null;
@@ -88,16 +92,16 @@ public class DnsServerService : IDnsServerService
         
         var nameServerGroup = new NameServerGroup
         {
-            Name = "ns1/ns2.example.com",
+            Name = "default",
             DnsServer = server
         };
 
-        var ns1 = new NameServer { Name = "ns1.example.com", NameServerGroup = nameServerGroup };
-        var ns2 = new NameServer { Name = "ns2.example.com", NameServerGroup = nameServerGroup };
+        var ns1 = new NameServer { Name = ns1ev, NameServerGroup = nameServerGroup };
+        var ns2 = new NameServer { Name = ns2ev, NameServerGroup = nameServerGroup };
         _context.NameServerGroups.Add(nameServerGroup);
         _context.NameServers.AddRange(ns1, ns2);
         await _context.SaveChangesAsync();
-        Console.WriteLine("Example Nameservers added");
+        Console.WriteLine("Default nameservers added");
         return server;
     }
 }
