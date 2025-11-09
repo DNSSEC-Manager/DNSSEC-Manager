@@ -18,7 +18,7 @@ docker compose up -d
 # PowerDNS statistics
 http://localhost:8081/
 # DNSSEC Manager
-http://localhost:5000/
+http://localhost:8080/
 ```
 
 ## Default login
