@@ -31,12 +31,12 @@ services:
     networks:
       - traefik_proxy
 
-    healthcheck:
-      test: ["CMD", "traefik", "healthcheck", "--ping"]
-      interval: 20s
-      timeout: 5s
-      retries: 5
-      start_period: 20s
+    #healthcheck:
+      #test: ["CMD", "traefik", "healthcheck", "--ping"]
+      #interval: 20s
+      #timeout: 5s
+      #retries: 5
+      #start_period: 20s
 
     labels:
       - "traefik.enable=true"
@@ -71,12 +71,12 @@ services:
     depends_on:
       - pdns
 
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
-      interval: 15s
-      timeout: 5s
-      retries: 5
-      start_period: 25s
+    #healthcheck:
+      #test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      #interval: 15s
+      #timeout: 5s
+      #retries: 5
+      #start_period: 25s
 
     labels:
       - "traefik.enable=true"
@@ -112,12 +112,12 @@ services:
     depends_on:
       - db
 
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:8081/api/v1/servers/localhost"]
-      interval: 20s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
+    #healthcheck:
+      #test: ["CMD", "wget", "-qO-", "http://localhost:8081/api/v1/servers/localhost"]
+      #interval: 20s
+      #timeout: 5s
+      #retries: 10
+      #start_period: 30s
 
     labels:
       - "traefik.enable=true"
@@ -147,12 +147,12 @@ services:
     networks:
       - backend
 
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 20s
-      timeout: 5s
-      retries: 10
-      start_period: 40s
+    #healthcheck:
+      #test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      #interval: 20s
+      #timeout: 5s
+      #retries: 10
+      #start_period: 40s
 
 networks:
   backend:
