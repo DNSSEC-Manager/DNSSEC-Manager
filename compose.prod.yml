@@ -60,7 +60,6 @@ services:
       DNS_SERVER_API_KEY: ${PDNS_API_KEY}
       DNS_SERVER_NS1: ${DOMAIN_NS1}
       DNS_SERVER_NS2: ${DOMAIN_NS2}
-      DNS_SERVER_NS3: ${DOMAIN_NS3}
 
     volumes:
       - app-data:/app/storage
