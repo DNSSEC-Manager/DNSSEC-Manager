@@ -80,7 +80,7 @@ services:
 
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.dnssecmanager.rule=Host(`${DOMAIN}`)"
+      - "traefik.http.routers.dnssecmanager.rule=Host(`${BACKEND_HOST}`)"
       - "traefik.http.routers.dnssecmanager.entrypoints=websecure"
       - "traefik.http.routers.dnssecmanager.tls=true"
       - "traefik.http.routers.dnssecmanager.tls.certresolver=letsencrypt"
@@ -121,7 +121,7 @@ services:
 
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.pdns.rule=Host(`${DOMAIN}`)"
+      - "traefik.http.routers.pdns.rule=Host(`${PDNS_HOST}`)"
       - "traefik.http.routers.pdns.entrypoints=websecure"
       - "traefik.http.routers.pdns.tls=true"
       - "traefik.http.routers.pdns.tls.certresolver=letsencrypt"
