@@ -31,33 +31,54 @@ services:
     networks:
       - traefik_proxy
 
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/ping"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
     labels:
-      # Dashboard
       - "traefik.enable=true"
-      - "traefik.http.routers.dashboard.rule=Host(`${DOMAIN_DASHBOARD}`)"
+      - "traefik.http.routers.dashboard.rule=Host(`${TRAEFIK_HOST}`)"
       - "traefik.http.routers.dashboard.entrypoints=websecure"
       - "traefik.http.routers.dashboard.tls.certresolver=letsencrypt"
       - "traefik.http.routers.dashboard.middlewares=dashboard-auth"
-      - "traefik.http.middlewares.dashboard-auth.basicauth.users=${TRAEFIK_DASH_USER}:${TRAEFIK_DASH_AUTH}"
+      - "traefik.http.middlewares.dashboard-auth.basicauth.users=${TRAEFIK_USER}:${TRAEFIK_AUTH}"
       - "traefik.http.routers.dashboard.service=api@internal"
 
   backend:
     image: ghcr.io/dnssec-manager/dnssec-manager:latest
     container_name: dnssecmanager-backend
     restart: unless-stopped
+
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       HTTP_PORTS: 8080
-      DNS_SERVER_NAME: dnssecmanager
+      DNS_SERVER_NAME: PowerDNS
       DNS_SERVER_API_URL: http://pdns:8081
       DNS_SERVER_API_KEY: ${PDNS_API_KEY}
+      DNS_SERVER_NS1: ${DOMAIN_NS1}
+      DNS_SERVER_NS2: ${DOMAIN_NS2}
+      DNS_SERVER_NS3: ${DOMAIN_NS3}
+
     volumes:
       - app-data:/app/storage
+
     networks:
       - backend
       - traefik_proxy
+
     depends_on:
       - pdns
+
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 25s
+
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.dnssecmanager.rule=Host(`${DOMAIN}`)"
@@ -70,6 +91,7 @@ services:
     image: pschiffe/pdns-mysql:4.8
     container_name: dnssecmanager-pdns
     restart: unless-stopped
+
     environment:
       PDNS_launch: gmysql
       PDNS_gmysql_host: db
@@ -83,41 +105,60 @@ services:
       PDNS_webserver_address: 0.0.0.0
       PDNS_webserver_port: 8081
       PDNS_webserver_allow_from: 0.0.0.0/0
+
     networks:
       - backend
       - traefik_proxy
+
     depends_on:
       - db
+
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8081/api/v1/servers/localhost"]
+      interval: 20s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
     labels:
-      # PDNS stats via subdomain
       - "traefik.enable=true"
-      - "traefik.http.routers.pdns.rule=Host(`pdns.${DOMAIN}`)"
+      - "traefik.http.routers.pdns.rule=Host(`${DOMAIN}`)"
       - "traefik.http.routers.pdns.entrypoints=websecure"
       - "traefik.http.routers.pdns.tls=true"
       - "traefik.http.routers.pdns.tls.certresolver=letsencrypt"
       - "traefik.http.services.pdns.loadbalancer.server.port=8081"
-      # Optioneel Basic Auth
       - "traefik.http.routers.pdns.middlewares=pdns-auth"
-      - "traefik.http.middlewares.pdns-auth.basicauth.users=${TRAEFIK_DASH_USER}:${TRAEFIK_DASH_AUTH}"
+      - "traefik.http.middlewares.pdns-auth.basicauth.users=${TRAEFIK_USER}:${TRAEFIK_AUTH}"
 
   db:
     image: mariadb:11.8
     container_name: dnssecmanager-db
     restart: unless-stopped
+
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: pdns
       MYSQL_USER: pdns
       MYSQL_PASSWORD: ${PDNS_DB_PASSWORD}
+
     volumes:
       - pdns-data:/var/lib/mysql
       - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+
     networks:
       - backend
+
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 20s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
 
 networks:
   backend:
     driver: bridge
+
   traefik_proxy:
     driver: bridge
 
