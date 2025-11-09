@@ -14,10 +14,6 @@ services:
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
 
-      # Healthcheck ping endpoint
-      - "--ping=true"
-      - "--entrypoints.ping.address=:8082"
-
       # Let's Encrypt
       - "--certificatesresolvers.letsencrypt.acme.email=${EMAIL}"
       - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
@@ -36,7 +32,7 @@ services:
       - traefik_proxy
 
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:8082/ping"]
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
       interval: 20s
       timeout: 5s
       retries: 5
