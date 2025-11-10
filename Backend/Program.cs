@@ -79,7 +79,7 @@ namespace Backend
             app.UseForwardedHeaders();
             
             // Health Checks
-            app.MapHealthChecks("/health");
+            app.MapHealthChecks("/health").AllowAnonymous();
 
             // Middleware pipeline
             app.UseDeveloperExceptionPage();
