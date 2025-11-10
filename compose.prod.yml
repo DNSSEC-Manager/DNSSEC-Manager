@@ -17,8 +17,8 @@ services:
       # Let's Encrypt
       - "--certificatesresolvers.letsencrypt.acme.email=${EMAIL}"
       - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
-      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
-      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.letsencrypt.acme.httpChallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.httpChallenge.entrypoint=web"
 
     ports:
       - "80:80"
@@ -43,8 +43,8 @@ services:
       - "traefik.http.routers.dashboard.rule=Host(`${TRAEFIK_HOST}`)"
       - "traefik.http.routers.dashboard.entrypoints=websecure"
       - "traefik.http.routers.dashboard.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.dashboard.middlewares=dashboard-auth"
-      - "traefik.http.middlewares.dashboard-auth.basicauth.users=${TRAEFIK_USER}:${TRAEFIK_AUTH}"
+      #- "traefik.http.routers.dashboard.middlewares=dashboard-auth"
+      #- "traefik.http.middlewares.dashboard-auth.basicauth.users=${TRAEFIK_USER}:${TRAEFIK_AUTH}"
       - "traefik.http.routers.dashboard.service=api@internal"
 
   backend:
@@ -126,8 +126,8 @@ services:
       - "traefik.http.routers.pdns.tls=true"
       - "traefik.http.routers.pdns.tls.certresolver=letsencrypt"
       - "traefik.http.services.pdns.loadbalancer.server.port=8081"
-      - "traefik.http.routers.pdns.middlewares=pdns-auth"
-      - "traefik.http.middlewares.pdns-auth.basicauth.users=${TRAEFIK_USER}:${TRAEFIK_AUTH}"
+      #- "traefik.http.routers.pdns.middlewares=pdns-auth"
+      #- "traefik.http.middlewares.pdns-auth.basicauth.users=${TRAEFIK_USER}:${TRAEFIK_AUTH}"
 
   db:
     image: mariadb:11.8
