@@ -29,6 +29,7 @@ services:
       - "letsencrypt:/letsencrypt"
 
     networks:
+      - backend
       - traefik_proxy
 
     #healthcheck:
