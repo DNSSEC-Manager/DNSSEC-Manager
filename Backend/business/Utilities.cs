@@ -189,9 +189,15 @@ namespace Backend.Business
         // Returns the index of a registry in a list of registries
         public int GetRegistryIndexFromList(List<Registry> registries, Registry registry)
         {
+            if (registries == null || registries.Count == 0 || registry == null)
+            {
+                return -1;
+            }
+
             for (var i = 0; i < registries.Count; i++)
             {
-                if (registries[i].Id == registry.Id)
+                var item = registries[i];
+                if (item != null && item.Id == registry.Id)
                 {
                     return i;
                 }

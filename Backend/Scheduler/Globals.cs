@@ -55,8 +55,30 @@ namespace Backend.Scheduler
 
         public IRegistryProvider GetRegistryProvider(List<Registry> registries, List<IRegistryProvider> registryProviders, Domain domain)
         {
-            var registryIndex = _utilities.GetRegistryIndexFromList(registries, domain.Registry);
-            if (registryIndex == -1)
+            if (registries == null || registryProviders == null || domain == null)
+            {
+                return null;
+            }
+
+            // Prefer using the FK when the navigation property isn't eagerly loaded
+            int? registryId = domain.CustomRegistryId ?? domain.Registry?.Id;
+            if (registryId == null)
+            {
+                return null;
+            }
+
+            var registryIndex = -1;
+            for (var i = 0; i < registries.Count; i++)
+            {
+                var reg = registries[i];
+                if (reg != null && reg.Id == registryId)
+                {
+                    registryIndex = i;
+                    break;
+                }
+            }
+
+            if (registryIndex == -1 || registryIndex >= registryProviders.Count)
             {
                 return null;
             }
