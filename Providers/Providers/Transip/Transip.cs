@@ -71,23 +71,23 @@ namespace Providers
             };
         }
 
-        public bool DomainExists(string domainname)
+        public bool DomainExists(DomainData domainData)
         {
-            var domainRestResponse = CreateWebRequest("domains/" + domainname);
+            var domainRestResponse = CreateWebRequest("domains/" + domainData.FullName);
             return domainRestResponse.IsSuccessful;
         }
 
-        public RegistryDomainInfo GetDomainInfo(string domainname)
+        public RegistryDomainInfo GetDomainInfo(DomainData domainData)
         {
             var returnRegistryDomainInfo = new RegistryDomainInfo
             {
-                Name = domainname,
+                Name = domainData.FullName,
                 Error = "",
                 NameServers = new List<string>(),
                 RegistryDnsSecs = new List<RegistryDnsSec>()
             };
 
-            var domainRestResponse = CreateWebRequest("domains/" + domainname);
+            var domainRestResponse = CreateWebRequest("domains/" + domainData.FullName);
 
             if (!domainRestResponse.IsSuccessful)
             {
@@ -106,14 +106,14 @@ namespace Providers
                 };
             }
 
-            var nameserversRestResponse = CreateWebRequest("domains/" + domainname + "/nameservers");
+            var nameserversRestResponse = CreateWebRequest("domains/" + domainData.FullName + "/nameservers");
             var nameserversResponse = JsonConvert.DeserializeObject<Nameservers>(nameserversRestResponse.Content);
             foreach (var nameserver in nameserversResponse.NameserverList)
             {
                 returnRegistryDomainInfo.NameServers.Add(nameserver.Hostname);
             }
 
-            var dnssecRestResponse = CreateWebRequest("domains/" + domainname + "/dnssec");
+            var dnssecRestResponse = CreateWebRequest("domains/" + domainData.FullName + "/dnssec");
             var dnssecResponse = JsonConvert.DeserializeObject<DnssecEntries>(dnssecRestResponse.Content);
             foreach (var dnssecEntry in dnssecResponse.DnssecEntryList)
             {
@@ -130,25 +130,25 @@ namespace Providers
 
         }
 
-        public ProviderResponse Sign(string domainname, string flags, string algo, string pubKey, string keyTag)
+        public ProviderResponse Sign(DomainData domainData, string flags, string algo, string pubKey, string keyTag)
         {
             // Get current DNSSEC entries
-            var dnssecRestResponse = CreateWebRequest("domains/" + domainname + "/dnssec");
+            var dnssecRestResponse = CreateWebRequest("domains/" + domainData.FullName + "/dnssec");
             var dnssecEntries = JsonConvert.DeserializeObject<DnssecEntries>(dnssecRestResponse.Content);
 
             // Add new entry
             var newDnssecEntry = new DnssecEntry { Flags = flags, Algorithm = algo, PublicKey = pubKey, KeyTag = keyTag };
             dnssecEntries.DnssecEntryList.Add(newDnssecEntry);
             var payload = JsonConvert.SerializeObject(dnssecEntries);
-            var response = CreateWebRequest("domains/" + domainname + "/dnssec", "PUT", payload);  
+            var response = CreateWebRequest("domains/" + domainData.FullName + "/dnssec", "PUT", payload);  
 
             return new ProviderResponse { Success = response.IsSuccessful, Error = response.StatusCode.ToString() + response.Content };
         }
 
-        public ProviderResponse DeleteKey(string domainname, string flags, string algo, string pubKey)
+        public ProviderResponse DeleteKey(DomainData domainData, string flags, string algo, string pubKey)
         {
             // Get current DNSSEC entries
-            var dnssecRestResponse = CreateWebRequest("domains/" + domainname + "/dnssec");
+            var dnssecRestResponse = CreateWebRequest("domains/" + domainData.FullName + "/dnssec");
             var dnssecEntries = JsonConvert.DeserializeObject<DnssecEntries>(dnssecRestResponse.Content);
 
             // Find the entry to delete
@@ -171,7 +171,7 @@ namespace Providers
             }
 
             var payload = JsonConvert.SerializeObject(dnssecEntries);
-            var response = CreateWebRequest("domains/" + domainname + "/dnssec", "PUT", payload);
+            var response = CreateWebRequest("domains/" + domainData.FullName + "/dnssec", "PUT", payload);
 
             return new ProviderResponse { Success = response.IsSuccessful, Error = response.StatusCode.ToString() + response.Content };
         }

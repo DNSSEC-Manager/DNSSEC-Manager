@@ -4,6 +4,7 @@ using System.Linq;
 using Backend.Business;
 using Backend.Data;
 using Backend.Models;
+using Backend.Models.Extensions;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Providers;
@@ -137,14 +138,14 @@ namespace Backend.Scheduler
 
         private void DeleteOldKeyFromRegistry()
         {
-            var registryDnsSecKeys = _registryProvider.GetDomainInfo(_domain.Name).RegistryDnsSecs;
+            var registryDnsSecKeys = _registryProvider.GetDomainInfo(_domain.ToDomainData()).RegistryDnsSecs;
             ProviderResponse response;
             var success = false;
             foreach (var key in registryDnsSecKeys)
             {
                 if (key.Key != _keyNotToDel.Key || key.Flag != _keyNotToDel.Flag || key.Algo != _keyNotToDel.Algo)
                 {
-                    response = _registryProvider.DeleteKey(_domain.Name, key.Flag, key.Algo, key.Key);
+                    response = _registryProvider.DeleteKey(_domain.ToDomainData(), key.Flag, key.Algo, key.Key);
 
                     if (!response.Success)
                     {
@@ -234,7 +235,7 @@ namespace Backend.Scheduler
 
         private bool InitJob()
         {
-            var registryDnsSecKeys = _registryProvider.GetDomainInfo(_domain.Name).RegistryDnsSecs;
+            var registryDnsSecKeys = _registryProvider.GetDomainInfo(_domain.ToDomainData()).RegistryDnsSecs;
             var dnsZoneCryptokeys = _dnsProvider.GetZoneInfo(_domain.Name).DnsZoneCryptokeys;
 
             if (_job.Step == null)

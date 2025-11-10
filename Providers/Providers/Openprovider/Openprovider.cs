@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Text;
-using System.Xml;
 using System.Xml.Serialization;
-using Nager.PublicSuffix;
 using Providers.Dto;
 using Providers.Providers.Openprovider.Dto;
 
@@ -62,24 +60,21 @@ namespace Providers
             };
         }
 
-        public bool DomainExists(string domain)
+        public bool DomainExists(DomainData domainData)
         {
-            var resp = GetDomainInfo(domain);
+            var resp = GetDomainInfo(domainData);
 
             return resp.Error == null;
         }
 
-        public RegistryDomainInfo GetDomainInfo(string domain)
+        public RegistryDomainInfo GetDomainInfo(DomainData domainData)
         {
             var returnRegistryDomainInfo = new RegistryDomainInfo
             {
                 NameServers = new List<string>(),
                 RegistryDnsSecs = new List<RegistryDnsSec>()
             };
-
-            var domainParser = new DomainParser(new WebTldRuleProvider());
-            var fullDomain = domainParser.Get(domain);
-            var domainWithoutTld = domain.Remove(domain.Length - ("." + fullDomain.TLD).Length);
+            
             var openXml = new OpenXml
             {
                 Credentials = new Credentials
@@ -91,8 +86,8 @@ namespace Providers
                 {
                     Domain = new Domain
                     {
-                        Name = domainWithoutTld,
-                        Extension = fullDomain.TLD
+                        Name = domainData.NameWithoutTld,
+                        Extension = domainData.Tld
                     },
                     WithadditionalData = 1
                 }
@@ -138,11 +133,11 @@ namespace Providers
 
         }
 
-        public ProviderResponse Sign(string domain, string flag, string algo, string pubKey, string keyTag)
+        public ProviderResponse Sign(DomainData domainData, string flag, string algo, string pubKey, string keyTag)
         {
-            var domainInfo = GetDomainInfo(domain);
+            var domainInfo = GetDomainInfo(domainData);
             var modifyDomainKeys = new List<ModifyDomainKey>();
-            var openXml = GenerateModifyDomainRequest(domain);
+            var openXml = GenerateModifyDomainRequest(domainData);
 
             foreach (var domainInfoRegistryDnsSec in domainInfo.RegistryDnsSecs)
             {
@@ -170,11 +165,11 @@ namespace Providers
             return ModifyRequestError(response);
         }
 
-        public ProviderResponse DeleteKey(string domain, string flag, string algo, string pubKey)
+        public ProviderResponse DeleteKey(DomainData domainData, string flag, string algo, string pubKey)
         {
-            var domainInfo = GetDomainInfo(domain);
+            var domainInfo = GetDomainInfo(domainData);
             var modifyDomainKeys = new List<ModifyDomainKey>();
-            var openXml = GenerateModifyDomainRequest(domain);
+            var openXml = GenerateModifyDomainRequest(domainData);
 
             foreach (var domainInfoRegistryDnsSec in domainInfo.RegistryDnsSecs)
             {
@@ -221,10 +216,8 @@ namespace Providers
             };
         }
 
-        private OpenXml GenerateModifyDomainRequest(string domain)
+        private OpenXml GenerateModifyDomainRequest(DomainData domainData)
         {
-            var domainParser = new DomainParser(new WebTldRuleProvider());
-            var fullDomain = domainParser.Get(domain);
             var openXml = new OpenXml
             {
                 Credentials = new Credentials
@@ -236,8 +229,8 @@ namespace Providers
                 {
                     Domain = new Domain
                     {
-                        Name = fullDomain.Domain,
-                        Extension = fullDomain.TLD
+                        Name = domainData.NameWithoutTld,
+                        Extension = domainData.Tld,
                     },
                     IsDnssecEnabled = 1,
                     Dnsseckeys = new ModifyDomainDnsseckeys

@@ -4,9 +4,11 @@ using System.IO;
 using System.Linq;
 using Backend.Data;
 using Backend.Models;
+using Backend.Models.Extensions;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Nager.PublicSuffix;
+using Nager.PublicSuffix.RuleProviders;
 using Providers;
 using Providers.Dto;
 
@@ -36,11 +38,13 @@ namespace Backend.Business
     {
         private readonly ApplicationDbContext _context;
         private readonly IDataProtector _protector;
+        private readonly IDomainParserService _domainParserService;
 
-        public Utilities(ApplicationDbContext context, IDataProtectionProvider dataProtectionProvider)
+        public Utilities(ApplicationDbContext context, IDataProtectionProvider dataProtectionProvider, IDomainParserService domainParserService)
         {
             _context = context;
-            _protector = dataProtectionProvider.CreateProtector("ProtectData"); // Purpose (not a secret)
+            _protector = dataProtectionProvider.CreateProtector("ProtectData");
+            _domainParserService = domainParserService;
         }
 
         public string Protect(string unencryptedData)
@@ -75,12 +79,12 @@ namespace Backend.Business
 
         public int GetTldId(string domain)
         {
-            var domainParser = new DomainParser(new WebTldRuleProvider());
+            var domainInfo = _domainParserService.Parse(domain);
 
             string tld;
             try
             {
-                tld = domainParser.Parse(domain).TLD;
+                tld = domainInfo.TopLevelDomain;
             }
             catch (Exception)
             {
@@ -241,7 +245,7 @@ namespace Backend.Business
 
             foreach (var index in indexes)
             {
-                var exists = registryProviders[index].DomainExists(domain.Name);
+                var exists = registryProviders[index].DomainExists(domain.ToDomainData());
                 if (exists)
                 {
                     registryIndex = index;

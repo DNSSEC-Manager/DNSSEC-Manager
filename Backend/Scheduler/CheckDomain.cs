@@ -7,6 +7,7 @@ using Backend.Business;
 using Backend.Controllers;
 using Backend.Data;
 using Backend.Models;
+using Backend.Models.Extensions;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Providers;
@@ -206,11 +207,12 @@ namespace Backend.Scheduler
         {
             int registryIndex;
             var indexes = _utilities.GetRegistryCheckOrder(_registries, domain);
+            
             // Registry check
             if (domain.Registry != null)
             {
                 registryIndex = _utilities.GetRegistryIndexFromList(_registries, domain.Registry);
-                if (registryIndex == -1 || !_registryProviders[registryIndex].DomainExists(domain.Name))
+                if (registryIndex == -1 || !_registryProviders[registryIndex].DomainExists(domain.ToDomainData()))
                 {
                     registryIndex = _utilities.FindIfRegistriesHaveDomain(_registryProviders, domain, indexes);
                 }
@@ -320,7 +322,7 @@ namespace Backend.Scheduler
             var hadMatchingNameServers = domain.NameServerGroup?.DnsServerId == domain.DnsServerId;
 
             // Get domain info from registry
-            var registryDomainInfo = registryProvider.GetDomainInfo(domain.Name);
+            var registryDomainInfo = registryProvider.GetDomainInfo(domain.ToDomainData());
 
             if (!string.IsNullOrWhiteSpace(registryDomainInfo.Error))
             {

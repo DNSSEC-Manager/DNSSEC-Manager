@@ -4,6 +4,7 @@ using System.Linq;
 using Backend.Business;
 using Backend.Data;
 using Backend.Models;
+using Backend.Models.Extensions;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Providers;
@@ -139,7 +140,7 @@ namespace Backend.Scheduler
                 return false;
             }
 
-            var registryDnsSecKeys = _registryProvider.GetDomainInfo(_domain.Name).RegistryDnsSecs;
+            var registryDnsSecKeys = _registryProvider.GetDomainInfo(_domain.ToDomainData()).RegistryDnsSecs;
 
             ICollection<Providers.Dto.DnsZoneCryptokey> dnsZoneCryptokeys;
             try

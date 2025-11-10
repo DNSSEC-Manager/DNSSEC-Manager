@@ -44,5 +44,30 @@ namespace Backend.Models
         public ICollection<Job> Jobs { get; set; }
         public ICollection<DnsRecordSet> DnsRecordSets { get; set; }
         public ICollection<Cryptokey> Cryptokeys { get; set; }
+        
+        /// <summary>
+        /// Gets the domain name without the TLD extension.
+        /// For example: "example.com" -> "example"
+        /// </summary>
+        [NotMapped]
+        public string NameWithoutTld
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(Name) || TopLevelDomain == null || string.IsNullOrEmpty(TopLevelDomain.Tld))
+                {
+                    return Name;
+                }
+
+                // Remove the TLD and the dot separator
+                var tldWithDot = "." + TopLevelDomain.Tld;
+                if (Name.EndsWith(tldWithDot, StringComparison.OrdinalIgnoreCase))
+                {
+                    return Name.Substring(0, Name.Length - tldWithDot.Length);
+                }
+
+                return Name;
+            }
+        }
     }
 }

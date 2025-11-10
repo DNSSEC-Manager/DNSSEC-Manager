@@ -4,6 +4,7 @@ using System.Linq;
 using Backend.Business;
 using Backend.Data;
 using Backend.Models;
+using Backend.Models.Extensions;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Providers;
@@ -96,7 +97,7 @@ namespace Backend.Scheduler
 
         private bool InitJob()
         {
-            var registryDnsSecKeys = _registryProvider.GetDomainInfo(_domain.Name).RegistryDnsSecs.ToList();
+            var registryDnsSecKeys = _registryProvider.GetDomainInfo(_domain.ToDomainData()).RegistryDnsSecs.ToList();
             if (_job.Step == null)
             {
                 // Is there another _job running for this domain?
@@ -130,13 +131,13 @@ namespace Backend.Scheduler
 
         private void DeleteAllKeysFromRegistry()
         {
-            var registryDnsSecKeys = _registryProvider.GetDomainInfo(_domain.Name).RegistryDnsSecs.ToList();
+            var registryDnsSecKeys = _registryProvider.GetDomainInfo(_domain.ToDomainData()).RegistryDnsSecs.ToList();
             ProviderResponse response;
             var success = false;
 
             foreach (var key in registryDnsSecKeys)
             {
-                response = _registryProvider.DeleteKey(_domain.Name, key.Flag, key.Algo, key.Key);
+                response = _registryProvider.DeleteKey(_domain.ToDomainData(), key.Flag, key.Algo, key.Key);
                 if (!response.Success)
                 {
                     _context.Logs.Add(Logging.LogJob(_job, LogType.Error, response.Error + " (we will try again in 24 hours)"));

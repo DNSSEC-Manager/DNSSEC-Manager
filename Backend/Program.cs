@@ -67,6 +67,10 @@ namespace Backend
 
             // Hosted background scheduler
             services.AddHostedService<JobSchedulerService>();
+            
+            // Domain Parser Service (singleton, initialized at startup)
+            services.AddSingleton<IDomainParserService, DomainParserService>();
+            services.AddHostedService(provider => provider.GetRequiredService<IDomainParserService>() as DomainParserService);
 
             // Custom services
             services.AddScoped<IProviderDecider, ProviderDecider>();

@@ -116,21 +116,21 @@ namespace Providers
             return providerResponse;
         }
 
-        public bool DomainExists(string domain)
+        public bool DomainExists(DomainData domainData)
         {
-            var resp = GetDomainInfo(domain);
+            var resp = GetDomainInfo(domainData);
 
             return resp.Error == null && resp.Name != null;
         }
 
-        public RegistryDomainInfo GetDomainInfo(string domain)
+        public RegistryDomainInfo GetDomainInfo(DomainData domainData)
         {
             var registryDomainInfo = new RegistryDomainInfo
             {
                 RegistryDnsSecs = new List<RegistryDnsSec>()
             };
 
-            var domainInfoCmd = new DomainInfo(domain);
+            var domainInfoCmd = new DomainInfo(domainData.FullName);
             DomainInfoResponse resp;
 
             try
@@ -177,14 +177,14 @@ namespace Providers
             return registryDomainInfo;
         }
         
-        public ProviderResponse Sign(string domain, string flag, string algo, string pubKey, string keyTag)
+        public ProviderResponse Sign(DomainData domainData, string flag, string algo, string pubKey, string keyTag)
         {
-            return ChangeDnsKey(domain, flag, algo, pubKey, "secDNS:add");
+            return ChangeDnsKey(domainData.FullName, flag, algo, pubKey, "secDNS:add");
         }
 
-        public ProviderResponse DeleteKey(string domain, string flag, string algo, string pubKey)
+        public ProviderResponse DeleteKey(DomainData domainData, string flag, string algo, string pubKey)
         {
-            return ChangeDnsKey(domain, flag, algo, pubKey, "secDNS:rem");
+            return ChangeDnsKey(domainData.FullName, flag, algo, pubKey, "secDNS:rem");
         }
 
         public void Close()

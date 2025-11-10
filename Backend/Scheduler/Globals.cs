@@ -4,6 +4,7 @@ using System.Linq;
 using Backend.Business;
 using Backend.Data;
 using Backend.Models;
+using Backend.Models.Extensions;
 using Microsoft.AspNetCore.DataProtection;
 using Providers;
 using Providers.Dto;
@@ -66,7 +67,7 @@ namespace Backend.Scheduler
         public DnssecStatus GetDnssecStatus(Domain domain, IRegistryProvider registryProvider)
         {
             var dnsProvider = _providerDecider.DnsProvider(domain.DnsServer);
-            var registryDnsSecKeys = registryProvider.GetDomainInfo(domain.Name).RegistryDnsSecs;
+            var registryDnsSecKeys = registryProvider.GetDomainInfo(domain.ToDomainData()).RegistryDnsSecs;
 
             ICollection<DnsZoneCryptokey> dnsZoneCryptokeys;
             try
@@ -187,7 +188,7 @@ namespace Backend.Scheduler
             {
                 // TODO: We could check if the DNSSEC key still exists at the DNS Server...
                 // Or we just upload and let the checker find out if something is not in sync later...
-                var response = registryProvider.Sign(domain.Name, cryptokey.Flag, cryptokey.Algo, cryptokey.Key, cryptokey.KeyTag);
+                var response = registryProvider.Sign(domain.ToDomainData(), cryptokey.Flag, cryptokey.Algo, cryptokey.Key, cryptokey.KeyTag);
                 _utilities.ProviderErrorToLog(response, job);
                 //Context.Logs.Add(Logging.LogJob(job, LogType.Success, "DNSSEC Key succesfully upload"));
             }
@@ -221,12 +222,12 @@ namespace Backend.Scheduler
 
             if (registryDnsSecs == null)
             {
-                registryDnsSecs = registryProvider.GetDomainInfo(domain.Name).RegistryDnsSecs.ToList();
+                registryDnsSecs = registryProvider.GetDomainInfo(domain.ToDomainData()).RegistryDnsSecs.ToList();
             }
 
             foreach (var registryDnsSec in registryDnsSecs)
             {
-                var resp = registryProvider.DeleteKey(domain.Name, registryDnsSec.Flag, registryDnsSec.Algo,
+                var resp = registryProvider.DeleteKey(domain.ToDomainData(), registryDnsSec.Flag, registryDnsSec.Algo,
                     registryDnsSec.Key);
 
                 if (!resp.Success)

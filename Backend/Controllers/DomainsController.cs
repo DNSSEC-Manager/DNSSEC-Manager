@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Backend.Data;
 using Backend.Models;
+using Backend.Models.Extensions;
 using Backend.Scheduler;
 using Backend.ViewModels;
 using Providers;
@@ -362,7 +363,7 @@ namespace Backend.Controllers
                 if (domain.CustomRegistryId != null)
                 {
                     var registryProvider = _providerDecider.InitializeRegistryProvider(domain.Registry);
-                    var registryDomainInfo = registryProvider.GetDomainInfo(domain.Name);
+                    var registryDomainInfo = registryProvider.GetDomainInfo(domain.ToDomainData());
                     var registryDnssecs = registryDomainInfo.RegistryDnsSecs;
                     registryProvider.Close();
                     if (registryDnssecs != null)
