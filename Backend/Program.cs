@@ -30,6 +30,9 @@ namespace Backend
             
             // Configure clean console logging via MinimalConsoleFormatter
             builder.Logging.AddConsoleFormatter<MinimalConsoleFormatter, ConsoleFormatterOptions>();
+            
+            // Add Health Checks
+            builder.Services.AddHealthChecks();
 
             // Create data folder
             var dataFolder = Path.Combine(env.ContentRootPath, "storage");
@@ -74,6 +77,9 @@ namespace Backend
             var app = builder.Build();
 
             app.UseForwardedHeaders();
+            
+            // Health Checks
+            app.MapHealthChecks("/health");
 
             // Middleware pipeline
             app.UseDeveloperExceptionPage();
