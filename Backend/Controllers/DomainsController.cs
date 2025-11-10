@@ -274,6 +274,7 @@ namespace Backend.Controllers
                 .Include(d => d.DnsServer)
                 .Include(d => d.NameServerGroup).ThenInclude(d => d.NameServers)
                 .Include(d => d.Registry)
+                .Include(d => d.TopLevelDomain)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (domain == null)
@@ -363,7 +364,18 @@ namespace Backend.Controllers
                 if (domain.CustomRegistryId != null)
                 {
                     var registryProvider = _providerDecider.InitializeRegistryProvider(domain.Registry);
-                    var registryDomainInfo = registryProvider.GetDomainInfo(domain.ToDomainData());
+                    var dd = domain.ToDomainData();
+                    //Console.WriteLine($"[DEBUG_LOG] ToDomainData -> FullName={dd.FullName}, NameWithoutTld={dd.NameWithoutTld}, Tld={dd.Tld}");
+                    var registryDomainInfo = registryProvider.GetDomainInfo(dd);
+                    if (!string.IsNullOrWhiteSpace(registryDomainInfo.Error))
+                    {
+                        //Console.WriteLine($"[DEBUG_LOG] Registry GetDomainInfo error: {registryDomainInfo.Error}");
+                    }
+                    else
+                    {
+                        var count = registryDomainInfo.RegistryDnsSecs == null ? "null" : registryDomainInfo.RegistryDnsSecs.Count.ToString();
+                        //Console.WriteLine($"[DEBUG_LOG] RegistryDnsSecs count: {count}");
+                    }
                     var registryDnssecs = registryDomainInfo.RegistryDnsSecs;
                     registryProvider.Close();
                     if (registryDnssecs != null)

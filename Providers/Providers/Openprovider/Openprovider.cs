@@ -75,6 +75,17 @@ namespace Providers
                 RegistryDnsSecs = new List<RegistryDnsSec>()
             };
             
+            // Fail-fast validation: require TLD and name parts to be present
+            if (string.IsNullOrWhiteSpace(domainData?.Tld) || string.IsNullOrWhiteSpace(domainData?.NameWithoutTld))
+            {
+                return new RegistryDomainInfo
+                {
+                    Error = "Domain data is invalid: missing TLD or name (ensure TopLevelDomain is loaded)",
+                    NameServers = new List<string>(),
+                    RegistryDnsSecs = new List<RegistryDnsSec>()
+                };
+            }
+            
             var openXml = new OpenXml
             {
                 Credentials = new Credentials
@@ -135,7 +146,26 @@ namespace Providers
 
         public ProviderResponse Sign(DomainData domainData, string flag, string algo, string pubKey, string keyTag)
         {
+            // Fail-fast validation
+            if (string.IsNullOrWhiteSpace(domainData?.Tld) || string.IsNullOrWhiteSpace(domainData?.NameWithoutTld))
+            {
+                return new ProviderResponse
+                {
+                    Success = false,
+                    Error = "Domain data is invalid: missing TLD or name (ensure TopLevelDomain is loaded)"
+                };
+            }
+
             var domainInfo = GetDomainInfo(domainData);
+            if (!string.IsNullOrWhiteSpace(domainInfo?.Error))
+            {
+                return new ProviderResponse
+                {
+                    Success = false,
+                    Error = domainInfo.Error
+                };
+            }
+
             var modifyDomainKeys = new List<ModifyDomainKey>();
             var openXml = GenerateModifyDomainRequest(domainData);
 
@@ -167,6 +197,16 @@ namespace Providers
 
         public ProviderResponse DeleteKey(DomainData domainData, string flag, string algo, string pubKey)
         {
+            // Fail-fast validation
+            if (string.IsNullOrWhiteSpace(domainData?.Tld) || string.IsNullOrWhiteSpace(domainData?.NameWithoutTld))
+            {
+                return new ProviderResponse
+                {
+                    Success = false,
+                    Error = "Domain data is invalid: missing TLD or name (ensure TopLevelDomain is loaded)"
+                };
+            }
+
             var domainInfo = GetDomainInfo(domainData);
             var modifyDomainKeys = new List<ModifyDomainKey>();
             var openXml = GenerateModifyDomainRequest(domainData);

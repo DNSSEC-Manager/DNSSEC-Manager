@@ -60,6 +60,7 @@ namespace Backend.Scheduler
                 .Include(b => b.DnsServer)
                 .Include(b => b.Registry)
                 .Include(b => b.NameServerGroup)
+                .Include(b => b.TopLevelDomain)
                 //.Where(b => (b.LastChecked < datetimeValidHours || b.LastChecked == null) && !b.RemovedFromDnsServer && !b.IsReservedByScheduler)
                 .Where(b => (b.LastChecked < datetimeValidHours || b.LastChecked == null) && !b.RemovedFromDnsServer)
                 .OrderBy(x => x.LastChecked)

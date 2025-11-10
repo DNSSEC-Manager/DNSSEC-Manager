@@ -40,7 +40,7 @@ namespace Backend.Scheduler
         {
             _keyNotToDel = _job.Cryptokey;
 
-            _domain = _context.Domains.Include(b => b.DnsServer).SingleOrDefault(x => x.Id == _job.DomainId);
+            _domain = _context.Domains.Include(b => b.DnsServer).Include(d => d.TopLevelDomain).SingleOrDefault(x => x.Id == _job.DomainId);
             if (_domain == null)
             {
                 _context.Logs.Add(Logging.LogJob(_job, LogType.Error, "No domain found with ID " + _job.DomainId));

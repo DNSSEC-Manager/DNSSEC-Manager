@@ -38,7 +38,7 @@ namespace Backend.Scheduler
 
         public async System.Threading.Tasks.Task ExecuteAsync(System.Threading.CancellationToken ct = default)
         {
-            _domain = _context.Domains.Include(b => b.DnsServer).SingleOrDefault(x => x.Id == _job.DomainId);
+            _domain = _context.Domains.Include(b => b.DnsServer).Include(d => d.TopLevelDomain).SingleOrDefault(x => x.Id == _job.DomainId);
             if (_domain == null)
             {
                 _context.Logs.Add(Logging.LogJob(_job, LogType.Error, "No domain found with ID " + _job.DomainId));
@@ -97,7 +97,17 @@ namespace Backend.Scheduler
 
         private bool InitJob()
         {
-            var registryDnsSecKeys = _registryProvider.GetDomainInfo(_domain.ToDomainData()).RegistryDnsSecs.ToList();
+            var registryInfo = _registryProvider.GetDomainInfo(_domain.ToDomainData());
+            if (!string.IsNullOrWhiteSpace(registryInfo?.Error))
+            {
+                _job.IsSuccessful = false;
+                _job.IsCompleted = true;
+                _context.Logs.Add(Logging.LogJob(_job, LogType.Error, $"Registry returned an error: {registryInfo.Error}"));
+                return false;
+            }
+
+            var registryDnsSecKeys = registryInfo?.RegistryDnsSecs?.ToList() ?? new List<RegistryDnsSec>();
+
             if (_job.Step == null)
             {
                 // Is there another _job running for this domain?
@@ -131,7 +141,14 @@ namespace Backend.Scheduler
 
         private void DeleteAllKeysFromRegistry()
         {
-            var registryDnsSecKeys = _registryProvider.GetDomainInfo(_domain.ToDomainData()).RegistryDnsSecs.ToList();
+            var registryInfo = _registryProvider.GetDomainInfo(_domain.ToDomainData());
+            if (!string.IsNullOrWhiteSpace(registryInfo?.Error))
+            {
+                _context.Logs.Add(Logging.LogJob(_job, LogType.Error, $"Registry returned an error: {registryInfo.Error}"));
+                return;
+            }
+
+            var registryDnsSecKeys = registryInfo?.RegistryDnsSecs?.ToList() ?? new List<RegistryDnsSec>();
             ProviderResponse response;
             var success = false;
 
@@ -149,7 +166,8 @@ namespace Backend.Scheduler
                 }
             }
 
-            if (success)
+            // If there were no keys, we still consider this step complete and move on.
+            if (success || registryDnsSecKeys.Count == 0)
             {
                 _domain.SignMatch = false;
                 _domain.SignedAt = null;
