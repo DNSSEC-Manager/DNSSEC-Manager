@@ -70,7 +70,7 @@ namespace Backend.Scheduler
                 _job.RunAfter = DateTime.UtcNow.AddMilliseconds(msRunJobAgain);
                 _job.IsCompleted = true;
                 _job.UpdatedAt = DateTime.UtcNow;
-                _context.Add(Logging.LogJob(_job, LogType.Info, "All domains are fresh."));
+                //_context.Add(Logging.LogJob(_job, LogType.Info, "All domains are fresh."));
                 _context.SaveChanges();
                 return;
             }
