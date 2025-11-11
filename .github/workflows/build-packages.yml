@@ -1,0 +1,70 @@
+name: Build Linux Packages
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build-packages:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore & Publish
+        run: |
+          dotnet restore DnssecManager.sln
+          dotnet publish DnssecManager.sln -c Release -o output
+
+      - name: Install FPM
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ruby ruby-dev build-essential rpm
+          sudo gem install --no-document fpm
+
+      - name: Make scripts executable
+        run: chmod +x packaging/systemd/scripts/*.sh
+
+      - name: Create DEB package
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+
+          fpm -s dir -t deb \
+            -n dnssec-manager \
+            -v "$VERSION" \
+            --description "DNSSEC Manager for PowerDNS" \
+            --url "https://github.com/DNSSEC-Manager/DNSSEC-Manager" \
+            --license "MIT" \
+            --after-install packaging/systemd/scripts/postinstall.sh \
+            --before-remove packaging/systemd/scripts/preremove.sh \
+            output/=usr/local/dnssec-manager/ \
+            packaging/systemd/dnssec-manager.service=/lib/systemd/system/dnssec-manager.service
+
+      - name: Create RPM package
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+
+          fpm -s dir -t rpm \
+            -n dnssec-manager \
+            -v "$VERSION" \
+            --description "DNSSEC Manager for PowerDNS" \
+            --url "https://github.com/DNSSEC-Manager/DNSSEC-Manager" \
+            --license "MIT" \
+            --after-install packaging/systemd/scripts/postinstall.sh \
+            --before-remove packaging/systemd/scripts/preremove.sh \
+            output/=usr/local/dnssec-manager/ \
+            packaging/systemd/dnssec-manager.service=/usr/lib/systemd/system/dnssec-manager.service
+
+      - name: Upload Release Artifacts
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            *.deb
+            *.rpm
