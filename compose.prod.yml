@@ -105,11 +105,8 @@ services:
       PDNS_webserver_address: 0.0.0.0
       PDNS_webserver_port: 8081
       PDNS_webserver_allow_from: 0.0.0.0/0
-      PDNS_local_address: 0.0.0.0
-      PDNS_local_port: 53
-      PDNS_local_ipv6: '::'
-      PDNS_local_ipv6_port: 53
-
+      PDNS_local_address: "0.0.0.0,::"
+      
     ports:
       - "53:53/tcp"
       - "53:53/udp"
