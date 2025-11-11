@@ -1,0 +1,16 @@
+[Unit]
+Description=DNSSEC-Manager Web Application
+After=network.target
+
+[Service]
+WorkingDirectory=/usr/local/dnssec-manager
+EnvironmentFile=-/etc/dnssec-manager/dnssec-manager.conf
+ExecStart=/usr/local/dnssec-manager/DnssecManager
+Restart=always
+RestartSec=5
+SyslogIdentifier=dnssec-manager
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
