@@ -337,6 +337,14 @@ namespace Providers
             int newTtl, string newContent, bool replace = false)
         {
             id = TrailingDot(id);
+            
+            // ---- SPECIAL CASE FOR SOA ----
+            if (oldType.ToUpper() == "SOA")
+            {
+                return UpdateSoa(id, newName, newTtl, newContent);
+            }
+            // ---- END SPECIAL CASE ----
+            
             if (replace)
             {
                 var deleteResponse = DeleteRrset(id, oldName, oldType, oldContent);
@@ -360,6 +368,37 @@ namespace Providers
             }
 
             return resp;
+        }
+        
+        private ProviderResponse UpdateSoa(string id, string name, int ttl, string content)
+        {
+            var rrset = new
+            {
+                rrsets = new[]
+                {
+                    new
+                    {
+                        name = name,
+                        type = "SOA",
+                        ttl = ttl,
+                        changetype = "REPLACE",
+                        records = new[]
+                        {
+                            new { content = content, disabled = false }
+                        }
+                    }
+                }
+            };
+
+            var json = JsonConvert.SerializeObject(rrset);
+
+            var jsonString = CreateWebRequestAsync(
+                $"api/v1/servers/localhost/zones/{id}",
+                "PATCH",
+                json
+            );
+
+            return JsonReturnToproviderResponse(jsonString);
         }
 
         public int GetTtl(string id)
