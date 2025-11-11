@@ -25,7 +25,7 @@ EOF
     echo "Created default configuration file at $CONF_FILE"
 fi
 
-# systemd service installeren
+# Install systemd service
 if [ -f "/lib/systemd/system/$SERVICE" ] || [ -f "/usr/lib/systemd/system/$SERVICE" ]; then
     systemctl daemon-reload
     systemctl enable dnssec-manager
