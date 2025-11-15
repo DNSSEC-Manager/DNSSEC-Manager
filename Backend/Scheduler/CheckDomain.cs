@@ -230,14 +230,23 @@ namespace Backend.Scheduler
                 domain.NameServerGroupId = null;
                 domain.SignMatch = false;
                 domain.SignedAt = null;
+                // Do not assign navigation with an external entity instance; just clear it
+                domain.Registry = null;
                 _context.SaveChanges();
                 return null;
             }
 
             // Registry found
             var registryProvider = _registryProviders[registryIndex];
-            domain.Registry = _registries[registryIndex];
-            domain.CustomRegistryId = _registries[registryIndex].Id;
+            // Avoid assigning a detached/externally sourced Registry instance to the navigation property
+            // to prevent EF Core tracking conflicts. Only set the FK; the navigation can be reloaded when needed.
+            var registryId = _registries[registryIndex].Id;
+            domain.CustomRegistryId = registryId;
+            // If the navigation is currently loaded and points to a different Registry, clear it to keep the context consistent
+            if (domain.Registry != null && domain.Registry.Id != registryId)
+            {
+                domain.Registry = null;
+            }
             _context.SaveChanges();
             return registryProvider;
         }
