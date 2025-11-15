@@ -103,7 +103,8 @@ namespace Backend.Scheduler
 
         private void SignDomainAtDnsServer()
         {
-            var cryptokey = _globals.SignDomainAtDnsServer(_job.Domain);
+            // Use the domain we explicitly loaded to avoid relying on lazy/eager loading of Job.Domain
+            var cryptokey = _globals.SignDomainAtDnsServer(_domain);
             _context.Add(cryptokey);
 
             _job.CryptokeyId = cryptokey.Id;
@@ -275,7 +276,38 @@ namespace Backend.Scheduler
                         return false;
                 }
 
-                _job.Step = JobStep.SignDomainAtDnsServer;
+                // Idempotency: If a DNS key already exists that is not present at the registry,
+                // we should continue at UploadKeyToRegistry rather than creating a new DNS key again.
+                var pendingDnsKey = dnsZoneCryptokeys.FirstOrDefault(dnsKey =>
+                    !_utilities.RegistryKeysContainsDnsKey(registryDnsSecKeys.ToList(), dnsKey));
+
+                if (pendingDnsKey != null)
+                {
+                    // Ensure the job references this key so later steps know which one to keep
+                    var existingCrypto = _context.Cryptokeys.FirstOrDefault(c =>
+                        c.DomainId == _domain.Id && c.Key == pendingDnsKey.Key && c.Algo == pendingDnsKey.Algo && c.Flag == pendingDnsKey.Flag);
+                    if (existingCrypto == null)
+                    {
+                        existingCrypto = new Cryptokey
+                        {
+                            DomainId = _domain.Id,
+                            Flag = pendingDnsKey.Flag,
+                            Algo = pendingDnsKey.Algo,
+                            Key = pendingDnsKey.Key,
+                            KeyTag = pendingDnsKey.KeyTag
+                        };
+                        _context.Cryptokeys.Add(existingCrypto);
+                        _context.SaveChanges();
+                    }
+
+                    _job.CryptokeyId = existingCrypto.Id;
+                    _job.Step = JobStep.UploadKeyToRegistry;
+                    _context.Logs.Add(Logging.LogJob(_job, LogType.Info, "Found pending DNSSEC key on DNS server; skipping key creation and proceeding to upload to registry"));
+                }
+                else
+                {
+                    _job.Step = JobStep.SignDomainAtDnsServer;
+                }
             }
             return true;
         }

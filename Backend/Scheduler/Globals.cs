@@ -167,10 +167,44 @@ namespace Backend.Scheduler
                 return null;
             }
 
+            // Try to resolve the registry provider to allow idempotency checks
+            var registryProvider = GetRegistryProvider(Registries, RegistryProviders, domain);
+            if (registryProvider == null)
+            {
+                _context.Logs.Add(Logging.LogDomain(domain, LogType.Error, "Registry provider could not be found for signing"));
+                return null;
+            }
+
             var algo = GetAlgoFromDomain(domain);
             if (algo == null)
             {
                 return null;
+            }
+
+            // Idempotency: if a DNS key already exists that is not yet present in the registry,
+            // reuse that key instead of creating a new one.
+            try
+            {
+                var dnsKeys = dnsProvider.GetZoneInfo(domain.Name).DnsZoneCryptokeys?.ToList() ?? new List<DnsZoneCryptokey>();
+                var regKeys = registryProvider.GetDomainInfo(domain.ToDomainData()).RegistryDnsSecs?.ToList() ?? new List<RegistryDnsSec>();
+
+                var pendingDnsKey = dnsKeys.FirstOrDefault(d => !regKeys.Any(r => r.Key == d.Key && r.Algo == d.Algo && r.Flag == d.Flag));
+                if (pendingDnsKey != null)
+                {
+                    return new Cryptokey
+                    {
+                        DomainId = domain.Id,
+                        Flag = pendingDnsKey.Flag,
+                        Algo = pendingDnsKey.Algo,
+                        Key = pendingDnsKey.Key,
+                        KeyTag = pendingDnsKey.KeyTag
+                    };
+                }
+            }
+            catch (Exception e)
+            {
+                // If idempotency check fails, log and continue with signing to avoid blocking.
+                _context.Logs.Add(Logging.LogDomain(domain, LogType.Warning, "Failed to compare DNS/registry keys before signing: " + e.Message));
             }
 
             var signData = dnsProvider.Sign(domain.Name, algo.Name, algo.Bits);
