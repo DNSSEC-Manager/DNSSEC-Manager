@@ -217,7 +217,8 @@ input:focus, textarea:focus {
 .label {
   padding: 5px 10px;
   border-radius: 5px;
-  color: white; }
+  color: white;
+  white-space: nowrap;}
   .label--red {
     background-color: #dc3545; }
   .label--green {
