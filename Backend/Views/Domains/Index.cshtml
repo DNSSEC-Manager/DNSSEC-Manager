@@ -76,17 +76,17 @@
     Remove all filters
 </a>
 
-<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#SignAllDomainsModal">
-    Sign All Domains
-</button>
+@* <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#SignAllDomainsModal"> *@
+@*     Sign All Domains *@
+@* </button> *@
 
-<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#RolloverAllDomainsModal">
-    Rollover All Domains
-</button>
-
-<button type="button" class="btn btn-danger" data-toggle="modal" data-target="#UnsignAllDomainsModal">
-    Unsign All Domains
-</button>
+@* <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#RolloverAllDomainsModal"> *@
+@*     Rollover All Domains *@
+@* </button> *@
+@* *@
+@* <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#UnsignAllDomainsModal"> *@
+@*     Unsign All Domains *@
+@* </button> *@
 
 @if (!Model.AutomaticSigningEnabled)
 {
@@ -101,9 +101,9 @@
     </a>
 }*@
 
-<button type="button" class="btn btn-danger" data-toggle="modal" data-target="#CleanupDomainsModal">
-    Cleanup Removed Domains
-</button>
+@* <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#CleanupDomainsModal"> *@
+@*     Cleanup Removed Domains *@
+@* </button> *@
 
 <!-- Modal -->
 <div class="modal fade" id="CleanupDomainsModal" tabindex="-1" role="dialog" aria-hidden="true">
@@ -208,7 +208,7 @@
                 </a>
                 <br /> (@Model.SelectionDomainsCount domains)
             </th>
-            <th style="min-width: 10%">
+            <th style="min-width: 10%;white-space: nowrap;">
                 <div class="dropdown">
                     <a class="@(Model.DnsId == null ? "text-dark" : "") dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         DNS Server
@@ -231,7 +231,7 @@
                     </div>
                 </div>
             </th>
-            <th style="min-width: 10%">
+            <th style="min-width: 10%;white-space: nowrap;">
                 <div class="dropdown">
                     <a class="@(Model.RegistryId == null ? "text-dark" : "") dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         Registry
@@ -264,7 +264,7 @@
                     </div>
                 </div>
             </th>
-            <th style="min-width: 10%">
+            <th style="min-width: 10%;white-space: nowrap;">
                 <div class="dropdown">
                     <a class="@(Model.NameserversId == null ? "text-dark" : "") dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         Nameservers
@@ -297,7 +297,7 @@
                     </div>
                 </div>
             </th>
-            <th style="min-width: 10%">
+            <th style="min-width: 10%;white-space: nowrap;">
                 <div class="dropdown">
                     <a class="@(Model.Removed == null ? "text-dark" : "") dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         Status
@@ -321,7 +321,7 @@
                     </div>
                 </div>
             </th>
-            <th style="min-width: 10%">
+            <th style="min-width: 10%;white-space: nowrap;">
                 <div class="dropdown">
                     <a class="@(Model.Signed == null ? "text-dark" : "") dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         DNSSEC
@@ -345,7 +345,7 @@
                     </div>
                 </div>
             </th>
-            <th style="min-width: 10%">
+            <th style="min-width: 10%;white-space: nowrap;">
                 <a class="@(Model.Sort != "ttl" && Model.Sort != "ttl_desc" ? "text-dark" : "") " asp-action="Index" asp-route-search="@Model.Search"
                    asp-route-pageNumber="1" asp-route-registryId="@Model.RegistryId"
                    asp-route-dnsId="@Model.DnsId" asp-route-nameserversId="@Model.NameserversId" asp-route-removed="@Model.Removed" asp-route-signed="@Model.Signed" asp-route-pageSize="@Model.PageSize"
@@ -361,7 +361,7 @@
                     }
                 </a>
             </th>
-            <th style="min-width: 10%">
+            <th style="min-width: 10%;white-space: nowrap;">
                 <a class="@(Model.Sort != "lastChecked" && Model.Sort != "lastChecked_desc" ? "text-dark" : "") " asp-action="Index" asp-route-search="@Model.Search"
                    asp-route-pageNumber="1" asp-route-registryId="@Model.RegistryId"
                    asp-route-dnsId="@Model.DnsId" asp-route-nameserversId="@Model.NameserversId" asp-route-removed="@Model.Removed" asp-route-signed="@Model.Signed" asp-route-pageSize="@Model.PageSize"
@@ -422,7 +422,7 @@
                         <p>-</p>
                     }
                 </td>
-                <td>
+                <td style="white-space: nowrap;">
                     @if (item.LastChecked != null)
                     {
                         @(item.LastChecked >= DateTime.Now ? "Now" : (DateTime.Now - (DateTime)item.LastChecked).Humanize() + " ago")
