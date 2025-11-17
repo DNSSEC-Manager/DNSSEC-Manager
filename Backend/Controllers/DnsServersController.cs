@@ -78,7 +78,7 @@ namespace Backend.Controllers
             }
 
             var dnsServer = await _context.DnsServers
-                //.Include(d => d.Domains)
+                .Include(d => d.Domains)
                 .Include(d => d.NameServerGroups).ThenInclude(n => n.NameServers)
                 .Include(d => d.NameServerGroups).ThenInclude(n => n.Domains)
                 .FirstOrDefaultAsync(m => m.Id == id);
