@@ -9,6 +9,12 @@ using Microsoft.Extensions.Configuration;
 
 namespace Backend.Services;
 
+public interface IDnsServerService
+{
+    Task<DnsServer> CreateDnsServerAsync(DnsServer dnsServer);
+    Task<DnsServer> CreateDnsServerFromEnvironmentAsync();
+}
+
 public class DnsServerService : IDnsServerService
 {
     private readonly ApplicationDbContext _context;

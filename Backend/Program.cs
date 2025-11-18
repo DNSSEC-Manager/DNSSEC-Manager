@@ -77,6 +77,7 @@ namespace Backend
             services.AddScoped<IUtilities, Utilities>();
             services.AddScoped<IGlobals, Globals>();
             services.AddScoped<IDnsServerService, DnsServerService>();
+            services.AddScoped<IDomainService, DomainService>();
 
             var app = builder.Build();
 

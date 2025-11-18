@@ -10,6 +10,7 @@ using Backend.Data;
 using Backend.Models;
 using Backend.Models.Extensions;
 using Backend.Scheduler;
+using Backend.Services;
 using Backend.ViewModels;
 using Providers;
 using Providers.Dto;
@@ -23,16 +24,18 @@ namespace Backend.Controllers
         private readonly IUtilities _utilities;
         private readonly IProviderDecider _providerDecider;
         private readonly IGlobals _globals;
+        private readonly IDomainService _domainService;
 
-        public DomainsController(ApplicationDbContext context, IUtilities utilities, IProviderDecider providerDecider, IGlobals globals)
+        public DomainsController(ApplicationDbContext context, IUtilities utilities, IProviderDecider providerDecider, IGlobals globals, IDomainService domainService)
         {
             _context = context;
             _utilities = utilities;
             _providerDecider = providerDecider;
             _globals = globals;
+            _domainService = domainService;
         }
 
-        // GET: Domains
+        // GET: Domains/Index
         public async Task<IActionResult> Index(int? pageNumber, string sort, string search, int? registryId, int? dnsId, int? nameserversId, int? removed, int? signed, int? pageSize)
         {
             var domains = await _context.Domains.Include(d => d.DnsServer).Include(d => d.NameServerGroup).Include(d => d.Registry).ToListAsync();
@@ -168,98 +171,6 @@ namespace Backend.Controllers
             };
 
             return View(vm);
-        }
-
-        //CleanupAllDomains
-        [HttpPost]
-        public string CleanupAllDomains()
-        {
-            var domains = _context.Domains.Where(b => b.RemovedFromDnsServer).ToList();
-            foreach (var domain in domains)
-            {
-                //remove
-                RemoveDomainFromDatabase(domain);
-            }
-            _context.SaveChanges();
-            return "success";
-        }
-
-        [HttpPost]
-        public string SignAllDomains()
-        {
-            var domains = _context.Domains.Where(b => !b.SignMatch && b.CustomRegistryId != null && b.NameServerGroupId != null).ToList();
-            var newJobs = new List<Job>();
-            foreach (var domain in domains)
-            {
-                var jobsOnDomain = _context.Jobs.Where(b => b.IsCompleted == false && b.DomainId == domain.Id).ToList();
-                if (jobsOnDomain.Count == 0)
-                {
-                    var newJob = new Job
-                    {
-                        Domain = domain,
-                        DomainId = domain.Id,
-                        Task = JobName.SignDomain,
-                        CreatedAt = DateTime.Now,
-                        RunAfter = DateTime.Now
-                    };
-                    newJobs.Add(newJob);
-                }
-            }
-            _context.Jobs.AddRange(newJobs);
-            _context.SaveChanges();
-            return "success";
-        }
-
-        [HttpPost]
-        public string RolloverAllDomains()
-        {
-            var domains = _context.Domains.Where(b => b.SignMatch).ToList();
-            var newJobs = new List<Job>();
-            foreach (var domain in domains)
-            {
-                var jobsOnDomain = _context.Jobs.Where(b => b.IsCompleted == false && b.DomainId == domain.Id).ToList();
-                if (jobsOnDomain.Count == 0)
-                {
-                    var newJob = new Job
-                    {
-                        Domain = domain,
-                        DomainId = domain.Id,
-                        Task = JobName.KeyRolloverDomain,
-                        CreatedAt = DateTime.Now,
-                        RunAfter = DateTime.Now
-                    };
-                    newJobs.Add(newJob);
-                }
-            }
-            _context.Jobs.AddRange(newJobs);
-            _context.SaveChanges();
-            return "success";
-        }
-
-        [HttpPost]
-        public string UnsignAllDomains()
-        {
-            var domains = _context.Domains.Where(b => b.SignMatch).ToList();
-            var newJobs = new List<Job>();
-            foreach (var domain in domains)
-            {
-                var jobsOnDomain = _context.Jobs.Where(b => b.IsCompleted == false && b.DomainId == domain.Id).ToList();
-                if (jobsOnDomain.Count == 0)
-                {
-                    var newJob = new Job
-                    {
-                        Domain = domain,
-                        DomainId = domain.Id,
-                        Task = JobName.UnSignDomain,
-                        CreatedAt = DateTime.Now,
-                        RunAfter = DateTime.Now
-                    };
-                    newJobs.Add(newJob);
-                }
-            }
-            _context.Jobs.AddRange(newJobs);
-            _context.SaveChanges();
-            return "success";
         }
 
         // GET: Domains/Details/5
@@ -439,6 +350,27 @@ namespace Backend.Controllers
 
                 return View(vm);
             }
+        }
+        
+        // GET: Domains/Create
+        public IActionResult Create()
+        {
+            ViewData["DnsServerId"] = new SelectList(_context.DnsServers, "Id", "Name");
+            return View();
+        }
+
+        // POST: Domains/Create
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create([Bind("Id,Name,DnsServerId")] Domain domain)
+        {
+            if (ModelState.IsValid)
+            {
+                await _domainService.CreateDomainAsync(domain);
+                return RedirectToAction(nameof(Details), new { id = domain.Id });
+            }
+            ViewData["DnsServerId"] = new SelectList(_context.DnsServers.Include(d => d.NameServerGroups).ThenInclude(g => g.NameServers), "Id", "Name", domain.DnsServerId);
+            return View(domain);
         }
 
         [HttpPost]
@@ -872,44 +804,7 @@ namespace Backend.Controllers
 
             return "success";
         }
-
-        [HttpPost]
-        public string CreateDomain(int dnsId, string name)
-        {
-            name = name.ToLower();
-            var dnsServer = _context.DnsServers.FirstOrDefault(b => b.Id == dnsId);
-
-            IDnsProvider provider;
-            try
-            {
-                provider = _providerDecider.DnsProvider(dnsServer);
-            }
-            catch (Exception)
-            {
-                return "Connection with the DNS Server failed.";
-            }
-
-            var createResponse = provider.CreateZone(name);
-
-            if (!createResponse.Success)
-            {
-                return createResponse.Error;
-            }
-
-            var newDomain = new Domain
-            {
-                Name = name,
-                CreatedAt = DateTime.Now,
-                DnsServerId = dnsId,
-                TopLevelDomainId = _utilities.GetTldId(name),
-                Ttl = provider.GetTtl(name)
-            };
-            _context.Add(newDomain);
-            _context.SaveChanges();
-            // TODO: DELETE The domain here
-            return "success: " + newDomain.Id;
-        }
-
+        
         [HttpPost]
         public string CheckDomainNow(int id)
         {
@@ -1000,6 +895,98 @@ namespace Backend.Controllers
 
             _context.SaveChanges();
 
+            return "success";
+        }
+        
+        //CleanupAllDomains
+        [HttpPost]
+        public string CleanupAllDomains()
+        {
+            var domains = _context.Domains.Where(b => b.RemovedFromDnsServer).ToList();
+            foreach (var domain in domains)
+            {
+                //remove
+                RemoveDomainFromDatabase(domain);
+            }
+            _context.SaveChanges();
+            return "success";
+        }
+
+        [HttpPost]
+        public string SignAllDomains()
+        {
+            var domains = _context.Domains.Where(b => !b.SignMatch && b.CustomRegistryId != null && b.NameServerGroupId != null).ToList();
+            var newJobs = new List<Job>();
+            foreach (var domain in domains)
+            {
+                var jobsOnDomain = _context.Jobs.Where(b => b.IsCompleted == false && b.DomainId == domain.Id).ToList();
+                if (jobsOnDomain.Count == 0)
+                {
+                    var newJob = new Job
+                    {
+                        Domain = domain,
+                        DomainId = domain.Id,
+                        Task = JobName.SignDomain,
+                        CreatedAt = DateTime.Now,
+                        RunAfter = DateTime.Now
+                    };
+                    newJobs.Add(newJob);
+                }
+            }
+            _context.Jobs.AddRange(newJobs);
+            _context.SaveChanges();
+            return "success";
+        }
+
+        [HttpPost]
+        public string RolloverAllDomains()
+        {
+            var domains = _context.Domains.Where(b => b.SignMatch).ToList();
+            var newJobs = new List<Job>();
+            foreach (var domain in domains)
+            {
+                var jobsOnDomain = _context.Jobs.Where(b => b.IsCompleted == false && b.DomainId == domain.Id).ToList();
+                if (jobsOnDomain.Count == 0)
+                {
+                    var newJob = new Job
+                    {
+                        Domain = domain,
+                        DomainId = domain.Id,
+                        Task = JobName.KeyRolloverDomain,
+                        CreatedAt = DateTime.Now,
+                        RunAfter = DateTime.Now
+                    };
+                    newJobs.Add(newJob);
+                }
+            }
+            _context.Jobs.AddRange(newJobs);
+            _context.SaveChanges();
+            return "success";
+        }
+
+        [HttpPost]
+        public string UnsignAllDomains()
+        {
+            var domains = _context.Domains.Where(b => b.SignMatch).ToList();
+            var newJobs = new List<Job>();
+            foreach (var domain in domains)
+            {
+                var jobsOnDomain = _context.Jobs.Where(b => b.IsCompleted == false && b.DomainId == domain.Id).ToList();
+                if (jobsOnDomain.Count == 0)
+                {
+                    var newJob = new Job
+                    {
+                        Domain = domain,
+                        DomainId = domain.Id,
+                        Task = JobName.UnSignDomain,
+                        CreatedAt = DateTime.Now,
+                        RunAfter = DateTime.Now
+                    };
+                    newJobs.Add(newJob);
+                }
+            }
+            _context.Jobs.AddRange(newJobs);
+            _context.SaveChanges();
             return "success";
         }
 
