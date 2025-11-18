@@ -364,12 +364,30 @@ namespace Backend.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Name,DnsServerId")] Domain domain)
         {
-            if (ModelState.IsValid)
+            // Let DataAnnotations run first (e.g., [Required])
+            if (!ModelState.IsValid)
+            {
+                ViewData["DnsServerId"] = new SelectList(_context.DnsServers, "Id", "Name", domain.DnsServerId);
+                return View(domain);
+            }
+
+            try
             {
                 await _domainService.CreateDomainAsync(domain);
                 return RedirectToAction(nameof(Details), new { id = domain.Id });
             }
-            ViewData["DnsServerId"] = new SelectList(_context.DnsServers.Include(d => d.NameServerGroups).ThenInclude(g => g.NameServers), "Id", "Name", domain.DnsServerId);
+            catch (Backend.Services.DomainServiceException ex)
+            {
+                // Surface service error to the user
+                ModelState.AddModelError(string.Empty, ex.Message);
+            }
+            catch (Exception)
+            {
+                // Generic fallback
+                ModelState.AddModelError(string.Empty, "An unexpected error occurred while creating the domain. Please try again.");
+            }
+
+            ViewData["DnsServerId"] = new SelectList(_context.DnsServers, "Id", "Name", domain.DnsServerId);
             return View(domain);
         }
 
