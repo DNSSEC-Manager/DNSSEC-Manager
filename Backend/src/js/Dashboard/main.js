@@ -3,6 +3,13 @@ var red = "220, 53, 69" //"#dc3545"
 var yellow = "255, 193, 7" //"#ffc107"
 
 $(document).ready(function () {
+    // Only run on pages that actually contain the dashboard charts
+    var signedCanvas = document.getElementById('signedChart');
+    var activeCanvas = document.getElementById('activeChart');
+    if (!signedCanvas || !activeCanvas || typeof Chart === 'undefined') {
+        return;
+    }
+
     var dataSignedChart = {
         labels: ['Signed', 'Unsigned'],
         datasets: [{
@@ -19,7 +26,7 @@ $(document).ready(function () {
             borderWidth: 1
         }]
     };
-    var signedChartElem = document.getElementById('signedChart').getContext('2d');
+    var signedChartElem = signedCanvas.getContext('2d');
 
     var signedChart = new Chart(signedChartElem, {
         type: 'pie',
@@ -47,7 +54,7 @@ $(document).ready(function () {
             borderWidth: 1
         }]
     };
-    var activeChartElem = document.getElementById('activeChart').getContext('2d');
+    var activeChartElem = activeCanvas.getContext('2d');
 
     var activeChart = new Chart(activeChartElem, {
         type: 'pie',

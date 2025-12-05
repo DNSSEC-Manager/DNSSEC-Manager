@@ -537,14 +537,6 @@
 </div>
 
 @section Scripts {
-
-    <environment names="Development">
-        <script src="~/js/Domains.js" asp-append-version="true"></script>
-
-    </environment>
-    <environment names="Staging,Production">
-        <script src="~/js/Domains.min.js" asp-append-version="true"></script>
-    </environment>
 }
 @* <div class="paginationCustom"> *@
 @*     <a class="btn btn-default @(!Model.HasPreviousPage ? "disabled" : "")" asp-action="Index" asp-route-search="@Model.Search" asp-route-removed="@Model.Removed" asp-route-signed="@Model.Signed" asp-route-pageSize="@Model.PageSize" asp-route-pageNumber="@(Model.PageNumber - 1)" asp-route-registryId="@Model.RegistryId" asp-route-dnsId="@Model.DnsId" asp-route-nameserversId="@Model.NameserversId" asp-route-sort="@Model.Sort"> *@

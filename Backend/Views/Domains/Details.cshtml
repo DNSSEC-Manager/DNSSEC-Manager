@@ -623,17 +623,13 @@
 </div>
 
 @section Scripts {
-
     <environment names="Development">
-        <script src="~/js/DomainDetails.js" asp-append-version="true"></script>
         <script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.js"></script>
         <script>
 //        $('#toggle-demo').bootstrapToggle()
         </script>
-
     </environment>
     <environment names="Staging,Production">
-        <script src="~/js/DomainDetails.min.js" asp-append-version="true"></script>
         @* <script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script> *@
         <script>
 //        $('#toggle-demo').bootstrapToggle()
