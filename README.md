@@ -10,6 +10,15 @@
 
 The application connects to your **PowerDNS Authoritative Nameserver** via its API and to your **domain registrars** via their API. It checks whether a domain can be signed with DNSSEC to provide enhanced security, and handles the signing and key uploads automatically.
 
+## Supported Registries
+
+Currently we support the following registries:
+- SIDN (.nl)
+- Openprovider
+- TransIP
+
+We will be adding more registries in the future and you can contribute your own implementations in the folder: /Providers/Providers
+
 ## 🖼 UI Preview
 
 ### 📊 Dashboard
