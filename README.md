@@ -10,6 +10,13 @@
 
 The application connects to your **PowerDNS Authoritative Nameserver** via its API and to your **domain registrars** via their API. It checks whether a domain can be signed with DNSSEC to provide enhanced security, and handles the signing and key uploads automatically.
 
+## 🖼 UI Preview
+
+### 📊 Dashboard
+
+![Dashboard](dashboard.png)
+Real-time DNSSEC system status and domain statistics.
+
 ## 🚀 Deployment Options
 
 ### 1️⃣ One-command installer (Ubuntu 24.04 VPS)
