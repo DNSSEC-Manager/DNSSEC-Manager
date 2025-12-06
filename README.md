@@ -1,35 +1,69 @@
 # DNSSEC Manager for PowerDNS
 
+![GitHub License](https://img.shields.io/github/license/DNSSEC-Manager/DNSSEC-Manager)
+![Status](https://img.shields.io/badge/status-active-success)
+![Platform](https://img.shields.io/badge/platform-Docker%20%7C%20Linux-blue)
+
 **DNSSEC Manager** is a tool for DNS administrators that connects your PowerDNS nameservers with your domain registrars. It automates the signing of DNS zones with DNSSEC and uploads the signing keys to the domain registrars.
 
-## Quick Start (Docker)
+## How it works
+
+The application connects to your **PowerDNS Authoritative Nameserver** via its API and to your **domain registrars** via their API. It checks whether a domain can be signed with DNSSEC to provide enhanced security, and handles the signing and key uploads automatically.
+
+## 🚀 Deployment Options
+
+### 1️⃣ One-command installer (Ubuntu 24.04 VPS)
+
+Tested on a clean Ubuntu 24.04 VPS server, this script installs a complete DNS server:
+
+- PowerDNS Authoritative
+- MariaDB
+- DNSSEC Manager backend
+- Traefik
+
+The wizard will tell you which DNS records you need to create to get started with your own PowerDNS nameserver.
+
+```bash
+curl -sSL https://dnssecmanager.net/install.sh | bash
+```
+
+### 2️⃣ Standalone Docker container (DNSSEC Manager only)
+
+Already have your own PowerDNS Auth server infra running? Spin up the DNSSEC Manager and connect it.
+
+```bash
+docker pull ghcr.io/dnssec-manager/dnssec-manager:latest
+docker run -d -p 8080:8080 \
+  -v dnssecmanager-storage:/app/storage \
+  ghcr.io/dnssec-manager/dnssec-manager:latest
+```
+
+#### Prepare PowerDNS
+
+To use this option, you need a running **PowerDNS Authoritative Nameserver**: [PowerDNS Authoritative Guide](https://doc.powerdns.com/authoritative/)
+
+- Configure API access in `/etc/pdns/pdns.conf`
+- Ensure your firewall allows access
+- For SSL configuration: [Configuring SSL for PowerDNS API](https://www.paulhermans.eu/configuring-ssl-for-powerdns-api/)
+
+
+### 3️⃣ Git Clone and Docker Compose
 
 Get the DNSSEC Manager running in just a few steps:
 
 ```bash
-# 1. Clone the repository
-git clone https://github.com/yourusername/DNSSEC-Manager.git
+git clone https://github.com/DNSSEC-Manager/DNSSEC-Manager.git
 cd DNSSEC-Manager
-
-# 2. Start the Docker containers
 docker compose up -d
-
-# 3. Open the web interfaces
-# PowerDNS statistics
-http://localhost:8081/
-# DNSSEC Manager
-http://localhost:8080/
 ```
 
-## Default login
+Open the web interfaces:
+- PowerDNS statistics
+http://localhost:8081/
+- DNSSEC Manager
+http://localhost:8080/
 
-- **Username:** admin
-- **Password:** ChangeMe123!
-- **Email:** example@dnssecmanager.net
-
-> Change the default credentials immediately after first login.
-
-## What Docker Compose Spins Up 🐳
+#### What Docker Compose Spins Up 🐳
 
 When you run `docker compose up -d`, three containers are started automatically:
 
@@ -41,24 +75,13 @@ When you run `docker compose up -d`, three containers are started automatically:
 
 This setup ensures your DNSSEC Manager can communicate with PowerDNS and store data automatically, without any extra configuration.
 
-## How it works
+## Default login
 
-The application connects to your **PowerDNS Authoritative Nameserver** via its API and to your **domain registrars** via their API. It checks whether a domain can be signed with DNSSEC to provide enhanced security, and handles the signing and key uploads automatically.
+- **Username:** admin
+- **Password:** ChangeMe123!
+- **Email:** example@dnssecmanager.net
 
-## Installation on a server
-
-1. Clone the repository to your IDE or server.
-2. Publish the project with **.NET** support.
-3. Create folder /storage and make writeable
-4. Browse to the web application URL to start using it.
-
-## Prepare PowerDNS
-
-To use this software, you need a **PowerDNS Authoritative Nameserver**: [PowerDNS Authoritative Guide](https://doc.powerdns.com/authoritative/)
-
-- Configure API access in `/etc/pdns/pdns.conf`
-- Ensure your firewall allows access
-- For SSL configuration: [Configuring SSL for PowerDNS API](https://www.paulhermans.eu/configuring-ssl-for-powerdns-api/)
+> Change the default credentials immediately after first login.
 
 ## First-time setup
 
